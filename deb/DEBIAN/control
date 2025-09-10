@@ -1,0 +1,13 @@
+Package: bitwarden-cli
+Version: 2025.8.0
+Section: utils
+Priority: optional
+Architecture: all
+Depends: nodejs (>= 20.0.0)
+Maintainer: Vladimir Kosteley <debian@ismd.dev>
+Description: Official Bitwarden Command-line Interface
+ The Bitwarden CLI is a powerful, full-featured command-line interface (CLI)
+ tool to access and manage a Bitwarden vault. The CLI is written with
+ TypeScript and Node.js and can be run on Windows, macOS, and Linux
+ distributions.
+Homepage: https://github.com/bitwarden/clients/tree/main/apps/cli
