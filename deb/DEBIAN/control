@@ -2,7 +2,7 @@ Package: bitwarden-cli
 Version: {VERSION}
 Section: utils
 Priority: optional
-Architecture: all
+Architecture: amd64
 Depends: nodejs (>= 20.0.0)
 Maintainer: Vladimir Kosteley <debian@ismd.dev>
 Description: Official Bitwarden Command-line Interface
