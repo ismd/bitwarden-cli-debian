@@ -20,6 +20,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        
     - name: Install build dependencies
       run: |
         sudo apt-get update
@@ -49,7 +54,7 @@ jobs:
         echo "debian_revision=$DEBIAN_REVISION" >> $GITHUB_OUTPUT
         echo "version=$FULL_VERSION" >> $GITHUB_OUTPUT
         echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
-        echo "deb_file=${PACKAGE_NAME}_${FULL_VERSION}_all.deb" >> $GITHUB_OUTPUT
+        echo "deb_file=${PACKAGE_NAME}_${FULL_VERSION}_amd64.deb" >> $GITHUB_OUTPUT
     
     - name: Build package
       env:
