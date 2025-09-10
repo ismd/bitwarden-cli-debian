@@ -1,5 +1,5 @@
 Package: bitwarden-cli
-Version: 2025.8.0
+Version: {VERSION}
 Section: utils
 Priority: optional
 Architecture: all
