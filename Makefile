@@ -1,11 +1,15 @@
 #!/usr/bin/make -f
 
-# Require VERSION environment variable
-ifndef VERSION
-$(error VERSION environment variable is required. Usage: VERSION=2025.9.0 make build)
+# Require UPSTREAM_VERSION environment variable
+ifndef UPSTREAM_VERSION
+$(error UPSTREAM_VERSION environment variable is required. Usage: UPSTREAM_VERSION=2025.9.0 DEBIAN_REVISION=1 make build)
 endif
 
-PACKAGE_VERSION := $(VERSION)
+# Default Debian revision to 1 if not specified
+DEBIAN_REVISION ?= 1
+
+# Construct full Debian version
+PACKAGE_VERSION := $(UPSTREAM_VERSION)-$(DEBIAN_REVISION)
 PACKAGE_NAME := bitwarden-cli
 ARCHITECTURE := all
 DEB_FILE := $(PACKAGE_NAME)_$(PACKAGE_VERSION)_$(ARCHITECTURE).deb
@@ -17,9 +21,9 @@ all: build
 
 # Update version in control file
 update-version:
-	@echo "Updating version to $(VERSION) in deb/DEBIAN/control..."
-	@sed -i 's/^Version:.*/Version: $(VERSION)/' deb/DEBIAN/control
-	@echo "Version updated successfully"
+	@echo "Updating version to $(PACKAGE_VERSION) in deb/DEBIAN/control..."
+	@sed -i 's/^Version:.*/Version: $(PACKAGE_VERSION)/' deb/DEBIAN/control
+	@echo "Version updated successfully ($(UPSTREAM_VERSION)-$(DEBIAN_REVISION))"
 
 # Build the .deb package
 build: update-version check
@@ -68,7 +72,9 @@ validate: build
 # Show package information
 info:
 	@echo "Package: $(PACKAGE_NAME)"
-	@echo "Version: $(PACKAGE_VERSION)"
+	@echo "Upstream Version: $(UPSTREAM_VERSION)"
+	@echo "Debian Revision: $(DEBIAN_REVISION)"
+	@echo "Full Version: $(PACKAGE_VERSION)"
 	@echo "Architecture: $(ARCHITECTURE)"
 	@echo "Output file: $(DEB_FILE)"
 
@@ -85,5 +91,9 @@ help:
 	@echo "  update-version - Update version in control file"
 	@echo "  help         - Show this help message"
 	@echo ""
-	@echo "REQUIRED: VERSION environment variable must be set"
-	@echo "Usage: VERSION=2025.9.0 make <target>"
+	@echo "REQUIRED: UPSTREAM_VERSION environment variable must be set"
+	@echo "OPTIONAL: DEBIAN_REVISION environment variable (defaults to 1)"
+	@echo ""
+	@echo "Usage examples:"
+	@echo "  UPSTREAM_VERSION=2025.9.0 make build                    # Creates 2025.9.0-1"
+	@echo "  UPSTREAM_VERSION=2025.9.0 DEBIAN_REVISION=2 make build  # Creates 2025.9.0-2"

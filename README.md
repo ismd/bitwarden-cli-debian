@@ -8,10 +8,10 @@ Official Debian package for the Bitwarden Command-line Interface (CLI). This rep
 
 ```bash
 # Download the latest release
-wget https://github.com/ismd/bitwarden-cli-debian/releases/latest/download/bitwarden-cli_2025.8.0_all.deb
+wget https://github.com/ismd/bitwarden-cli-debian/releases/latest/download/bitwarden-cli_2025.8.0-1_all.deb
 
 # Install the package
-sudo dpkg -i bitwarden-cli_2025.8.0_all.deb
+sudo dpkg -i bitwarden-cli_2025.8.0-1_all.deb
 
 # Fix any dependency issues (if needed)
 sudo apt-get install -f
@@ -24,11 +24,11 @@ sudo apt-get install -f
 git clone https://github.com/ismd/bitwarden-cli-debian.git
 cd bitwarden-cli-debian
 
-# Build the package (VERSION is required)
-VERSION=2025.8.0 make build
+# Build the package (UPSTREAM_VERSION is required)
+UPSTREAM_VERSION=2025.8.0 make build
 
 # Install locally
-VERSION=2025.8.0 make install
+UPSTREAM_VERSION=2025.8.0 make install
 ```
 
 ## 🚀 Usage
@@ -63,11 +63,11 @@ bw get item <item-id>
 # Install build dependencies
 sudo apt-get install dpkg-dev lintian
 
-# Build the package (VERSION environment variable required)
-VERSION=2025.8.0 make build
+# Build the package (UPSTREAM_VERSION environment variable required)
+UPSTREAM_VERSION=2025.8.0 make build
 
 # Validate the package
-VERSION=2025.8.0 make validate
+UPSTREAM_VERSION=2025.8.0 make validate
 
 # Clean build artifacts
 make clean
@@ -75,21 +75,30 @@ make clean
 
 ### Available Make Targets
 
-**Note:** All targets except `clean`, `help`, and `uninstall` require the `VERSION` environment variable.
+**Note:** All targets except `clean`, `help`, and `uninstall` require the `UPSTREAM_VERSION` environment variable.
 
-- `VERSION=X.Y.Z make build` - Build the .deb package
-- `VERSION=X.Y.Z make install` - Build and install package locally
+- `UPSTREAM_VERSION=X.Y.Z make build` - Build the .deb package (creates X.Y.Z-1)
+- `UPSTREAM_VERSION=X.Y.Z make install` - Build and install package locally
 - `make uninstall` - Remove installed package
 - `make clean` - Remove build artifacts
-- `VERSION=X.Y.Z make check` - Verify package structure
-- `VERSION=X.Y.Z make validate` - Validate built package with lintian
-- `VERSION=X.Y.Z make info` - Show package information
+- `UPSTREAM_VERSION=X.Y.Z make check` - Verify package structure
+- `UPSTREAM_VERSION=X.Y.Z make validate` - Validate built package with lintian
+- `UPSTREAM_VERSION=X.Y.Z make info` - Show package information
 - `make help` - Show all available commands
+
+**Debian Version Format:**
+The package follows Debian versioning: `upstream-revision` (e.g., `2025.8.0-1`)
 
 **Example usage:**
 ```bash
-VERSION=2025.8.0 make build
-VERSION=2025.9.0 make install
+# Build version 2025.8.0-1 (first packaging of upstream 2025.8.0)
+UPSTREAM_VERSION=2025.8.0 make build
+
+# Build version 2025.8.0-2 (second packaging revision, same upstream)
+UPSTREAM_VERSION=2025.8.0 DEBIAN_REVISION=2 make build
+
+# Build version 2025.9.0-1 (new upstream version)
+UPSTREAM_VERSION=2025.9.0 make build
 ```
 
 ## 🔄 Automated Builds
@@ -105,8 +114,17 @@ This repository uses GitHub Actions to automatically:
 
 1. **Tag-based release:**
    ```bash
+   # Create first packaging of upstream version 2025.8.0
+   git tag v2025.8.0-1
+   git push origin v2025.8.0-1
+   
+   # Or use short form (defaults to revision 1)
    git tag v2025.8.0
    git push origin v2025.8.0
+   
+   # Create packaging revision 2 for same upstream
+   git tag v2025.8.0-2  
+   git push origin v2025.8.0-2
    ```
 
 2. **Manual trigger:** Use the "Actions" tab in GitHub to manually run the workflow

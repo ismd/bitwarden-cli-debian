@@ -28,24 +28,39 @@ jobs:
     - name: Extract package info
       id: package_info
       run: |
-        if [[ "${{ github.ref }}" =~ refs/tags/v(.+) ]]; then
-          VERSION="${BASH_REMATCH[1]}"
+        if [[ "${{ github.ref }}" =~ refs/tags/v(.+)-([0-9]+) ]]; then
+          # Tag format: v2025.8.0-1
+          UPSTREAM_VERSION="${BASH_REMATCH[1]}"
+          DEBIAN_REVISION="${BASH_REMATCH[2]}"
+        elif [[ "${{ github.ref }}" =~ refs/tags/v(.+) ]]; then
+          # Tag format: v2025.8.0 (default to revision 1)
+          UPSTREAM_VERSION="${BASH_REMATCH[1]}"
+          DEBIAN_REVISION="1"
         else
-          VERSION="dev-$(date +%Y%m%d)-$(git rev-parse --short HEAD)"
+          # Development build
+          UPSTREAM_VERSION="dev-$(date +%Y%m%d)"
+          DEBIAN_REVISION="$(git rev-parse --short HEAD)"
         fi
+        
+        FULL_VERSION="${UPSTREAM_VERSION}-${DEBIAN_REVISION}"
         PACKAGE_NAME=$(grep "^Package:" deb/DEBIAN/control | cut -d' ' -f2)
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        
+        echo "upstream_version=$UPSTREAM_VERSION" >> $GITHUB_OUTPUT
+        echo "debian_revision=$DEBIAN_REVISION" >> $GITHUB_OUTPUT
+        echo "version=$FULL_VERSION" >> $GITHUB_OUTPUT
         echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
-        echo "deb_file=${PACKAGE_NAME}_${VERSION}_all.deb" >> $GITHUB_OUTPUT
+        echo "deb_file=${PACKAGE_NAME}_${FULL_VERSION}_all.deb" >> $GITHUB_OUTPUT
     
     - name: Build package
       env:
-        VERSION: ${{ steps.package_info.outputs.version }}
+        UPSTREAM_VERSION: ${{ steps.package_info.outputs.upstream_version }}
+        DEBIAN_REVISION: ${{ steps.package_info.outputs.debian_revision }}
       run: make build
     
     - name: Validate package
       env:
-        VERSION: ${{ steps.package_info.outputs.version }}
+        UPSTREAM_VERSION: ${{ steps.package_info.outputs.upstream_version }}
+        DEBIAN_REVISION: ${{ steps.package_info.outputs.debian_revision }}
       run: make validate
     
     - name: Upload build artifact
