@@ -3,7 +3,7 @@ Version: 2025.8.0
 Section: utils
 Priority: optional
 Architecture: all
-Depends: nodejs (>= 20.0.0)
+Depends: nodejs (>= 22.0.0)
 Maintainer: Vladimir Kosteley <debian@ismd.dev>
 Description: Official Bitwarden Command-line Interface
  The Bitwarden CLI is a powerful, full-featured command-line interface (CLI)
