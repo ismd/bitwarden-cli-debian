@@ -11,13 +11,29 @@ DEBIAN_REVISION ?= 1
 # Construct full Debian version
 PACKAGE_VERSION := $(UPSTREAM_VERSION)-$(DEBIAN_REVISION)
 PACKAGE_NAME := bitwarden-cli
-ARCHITECTURE := all
+ARCHITECTURE := amd64
 DEB_FILE := $(PACKAGE_NAME)_$(PACKAGE_VERSION)_$(ARCHITECTURE).deb
 
-.PHONY: all build clean install check help update-version
+.PHONY: all build clean install check help update-version build-cli
 
 # Default target
 all: build
+
+# Clone and build real Bitwarden CLI
+build-cli:
+	@echo "Building real Bitwarden CLI..."
+	@if [ ! -d "clients" ]; then \
+		echo "Cloning Bitwarden clients repository..."; \
+		git clone https://github.com/bitwarden/clients.git; \
+	fi
+	@echo "Installing dependencies..."
+	cd clients && npm ci
+	@echo "Building CLI..."
+	cd clients/apps/cli && npm run build:oss:prod
+	@echo "Copying built CLI to package..."
+	cp clients/apps/cli/build/bw.js deb/usr/bin/bw
+	chmod +x deb/usr/bin/bw
+	@echo "Real Bitwarden CLI built successfully"
 
 # Update version in control file
 update-version:
@@ -26,7 +42,7 @@ update-version:
 	@echo "Version updated successfully ($(UPSTREAM_VERSION)-$(DEBIAN_REVISION))"
 
 # Build the .deb package
-build: update-version check
+build: build-cli update-version check
 	@echo "Building $(DEB_FILE)..."
 	dpkg-deb --build deb $(DEB_FILE)
 	@echo "Package built successfully: $(DEB_FILE)"
@@ -35,6 +51,7 @@ build: update-version check
 clean:
 	@echo "Cleaning build artifacts..."
 	rm -f *.deb
+	rm -rf clients
 	@echo "Clean complete"
 
 # Install the package locally
@@ -56,8 +73,8 @@ check:
 		echo "Error: deb/DEBIAN/control not found"; \
 		exit 1; \
 	fi
-	@if [ ! -f deb/usr/local/bin/bw ]; then \
-		echo "Error: deb/usr/local/bin/bw not found"; \
+	@if [ ! -f deb/usr/bin/bw ]; then \
+		echo "Error: deb/usr/bin/bw not found"; \
 		exit 1; \
 	fi
 	@echo "Package structure OK"
@@ -81,8 +98,9 @@ info:
 # Show help
 help:
 	@echo "Available targets:"
-	@echo "  build        - Build the .deb package"
-	@echo "  clean        - Remove build artifacts"
+	@echo "  build        - Build the .deb package (includes building real CLI)"
+	@echo "  build-cli    - Build real Bitwarden CLI from source"
+	@echo "  clean        - Remove build artifacts and cloned repository"
 	@echo "  install      - Build and install package locally"
 	@echo "  uninstall    - Remove installed package"
 	@echo "  check        - Verify package structure"
