@@ -31,6 +31,7 @@ build-cli:
 	@echo "Building CLI..."
 	cd clients/apps/cli && npm run build:oss:prod
 	@echo "Copying built CLI to package..."
+	mkdir -p deb/usr/bin
 	cp clients/apps/cli/build/bw.js deb/usr/bin/bw
 	chmod +x deb/usr/bin/bw
 	@echo "Real Bitwarden CLI built successfully"
