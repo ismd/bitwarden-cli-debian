@@ -26,6 +26,8 @@ build-cli:
 		echo "Cloning Bitwarden clients repository..."; \
 		git clone https://github.com/bitwarden/clients.git; \
 	fi
+	@echo "Checking out CLI tag cli-v$(UPSTREAM_VERSION)..."
+	cd clients && git fetch --tags && git checkout cli-v$(UPSTREAM_VERSION)
 	@echo "Installing dependencies..."
 	cd clients && npm ci
 	@echo "Building CLI..."
