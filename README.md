@@ -8,10 +8,10 @@ Official Debian package for the Bitwarden Command-line Interface (CLI). This rep
 
 ```bash
 # Download the latest release
-wget https://github.com/ismd/bitwarden-cli-debian/releases/latest/download/bitwarden-cli_2025.8.0-1_all.deb
+wget https://github.com/ismd/bitwarden-cli-debian/releases/latest/download/bitwarden-cli_2025.9.0-1_all.deb
 
 # Install the package
-sudo dpkg -i bitwarden-cli_2025.8.0-1_all.deb
+sudo dpkg -i bitwarden-cli_2025.9.0-1_all.deb
 
 # Fix any dependency issues (if needed)
 sudo apt-get install -f
@@ -25,10 +25,10 @@ git clone https://github.com/ismd/bitwarden-cli-debian.git
 cd bitwarden-cli-debian
 
 # Build the package (UPSTREAM_VERSION is required)
-UPSTREAM_VERSION=2025.8.0 make build
+UPSTREAM_VERSION=2025.9.0 make build
 
 # Install locally
-UPSTREAM_VERSION=2025.8.0 make install
+UPSTREAM_VERSION=2025.9.0 make install
 ```
 
 ## 🚀 Usage
@@ -64,10 +64,10 @@ bw get item <item-id>
 sudo apt-get install dpkg-dev lintian
 
 # Build the package (UPSTREAM_VERSION environment variable required)
-UPSTREAM_VERSION=2025.8.0 make build
+UPSTREAM_VERSION=2025.9.0 make build
 
 # Validate the package
-UPSTREAM_VERSION=2025.8.0 make validate
+UPSTREAM_VERSION=2025.9.0 make validate
 
 # Clean build artifacts
 make clean
@@ -87,15 +87,15 @@ make clean
 - `make help` - Show all available commands
 
 **Debian Version Format:**
-The package follows Debian versioning: `upstream-revision` (e.g., `2025.8.0-1`)
+The package follows Debian versioning: `upstream-revision` (e.g., `2025.9.0-1`)
 
 **Example usage:**
 ```bash
-# Build version 2025.8.0-1 (first packaging of upstream 2025.8.0)
-UPSTREAM_VERSION=2025.8.0 make build
+# Build version 2025.9.0-1 (first packaging of upstream 2025.9.0)
+UPSTREAM_VERSION=2025.9.0 make build
 
-# Build version 2025.8.0-2 (second packaging revision, same upstream)
-UPSTREAM_VERSION=2025.8.0 DEBIAN_REVISION=2 make build
+# Build version 2025.9.0-2 (second packaging revision, same upstream)
+UPSTREAM_VERSION=2025.9.0 DEBIAN_REVISION=2 make build
 
 # Build version 2025.9.0-1 (new upstream version)
 UPSTREAM_VERSION=2025.9.0 make build
@@ -114,17 +114,17 @@ This repository uses GitHub Actions to automatically:
 
 1. **Tag-based release:**
    ```bash
-   # Create first packaging of upstream version 2025.8.0
-   git tag v2025.8.0-1
-   git push origin v2025.8.0-1
+   # Create first packaging of upstream version 2025.9.0
+   git tag v2025.9.0-1
+   git push origin v2025.9.0-1
    
    # Or use short form (defaults to revision 1)
-   git tag v2025.8.0
-   git push origin v2025.8.0
+   git tag v2025.9.0
+   git push origin v2025.9.0
    
    # Create packaging revision 2 for same upstream
-   git tag v2025.8.0-2  
-   git push origin v2025.8.0-2
+   git tag v2025.9.0-2  
+   git push origin v2025.9.0-2
    ```
 
 2. **Manual trigger:** Use the "Actions" tab in GitHub to manually run the workflow
