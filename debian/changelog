@@ -1,0 +1,5 @@
+bitwarden-cli (1.0-1) UNRELEASED; urgency=medium
+
+  * Initial release. (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- drozdov.m <drozdov-m@unknown>  Tue, 07 Oct 2025 12:02:02 +0300

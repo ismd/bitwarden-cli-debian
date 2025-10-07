@@ -14,13 +14,13 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # debian trixie
     permissions:
       contents: write
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4 # npm должен ставится как билд-депенденси из репо дебиан (см. ниже)
       
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -30,7 +30,9 @@ jobs:
     - name: Install build dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y dpkg-dev lintian
+        # sudo apt install -y devscripts
+        sudo apt-get install -y dpkg-dev lintian # sudo apt build-dep -y .
+        # debuild -j10 -uc -us -d -b // на выходе будет пакет с правильным названием и шаги ниже будут не нужны
     
     - name: Extract package info
       id: package_info
