@@ -3,7 +3,7 @@ Section: utils
 Priority: optional
 Maintainer: Vladimir Kosteley <debian@ismd.dev>
 Build-Depends: debhelper-compat (= 13),
-               nodejs (>= 18),
+               nodejs (>= 20),
                npm,
                git
 Standards-Version: 4.6.2
@@ -14,7 +14,7 @@ Rules-Requires-Root: no
 
 Package: bitwarden-cli
 Architecture: amd64
-Depends: ${shlibs:Depends}, ${misc:Depends}, nodejs (>= 18)
+Depends: ${shlibs:Depends}, ${misc:Depends}, nodejs (>= 20)
 Description: Official Bitwarden Command-line Interface
  The Bitwarden CLI is a powerful, full-featured command-line interface (CLI)
  tool to access and manage a Bitwarden vault. The CLI is written with
