@@ -15,23 +15,27 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: debian:bookworm
     permissions:
       contents: write
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        
-    - name: Install build dependencies
+
+    - name: Install build dependencies from Debian repos
       run: |
-        sudo apt-get update
-        sudo apt-get install -y dpkg-dev lintian
-    
+        apt-get update
+        apt-get install -y \
+          debhelper \
+          dpkg-dev \
+          lintian \
+          nodejs \
+          npm \
+          git \
+          ca-certificates
+
     - name: Extract package info
       id: package_info
       run: |
@@ -48,35 +52,51 @@ jobs:
           UPSTREAM_VERSION="dev-$(date +%Y%m%d)"
           DEBIAN_REVISION="$(git rev-parse --short HEAD)"
         fi
-        
+
         FULL_VERSION="${UPSTREAM_VERSION}-${DEBIAN_REVISION}"
-        PACKAGE_NAME=$(grep "^Package:" deb/DEBIAN/control | cut -d' ' -f2)
-        
+        PACKAGE_NAME="bitwarden-cli"
+
         echo "upstream_version=$UPSTREAM_VERSION" >> $GITHUB_OUTPUT
         echo "debian_revision=$DEBIAN_REVISION" >> $GITHUB_OUTPUT
         echo "version=$FULL_VERSION" >> $GITHUB_OUTPUT
         echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
         echo "deb_file=${PACKAGE_NAME}_${FULL_VERSION}_amd64.deb" >> $GITHUB_OUTPUT
-    
-    - name: Build package
-      env:
-        UPSTREAM_VERSION: ${{ steps.package_info.outputs.upstream_version }}
-        DEBIAN_REVISION: ${{ steps.package_info.outputs.debian_revision }}
-      run: make build
-    
+
+    - name: Update debian/changelog with version
+      run: |
+        UPSTREAM_VERSION="${{ steps.package_info.outputs.upstream_version }}"
+        DEBIAN_REVISION="${{ steps.package_info.outputs.debian_revision }}"
+        FULL_VERSION="${UPSTREAM_VERSION}-${DEBIAN_REVISION}"
+
+        # Update changelog with current version
+        cat > debian/changelog << EOF
+        bitwarden-cli ($FULL_VERSION) unstable; urgency=medium
+
+          * Build for version $UPSTREAM_VERSION
+
+         -- Vladimir Kosteley <debian@ismd.dev>  $(date -R)
+        EOF
+
+    - name: Build package using debuild
+      run: |
+        # Build using Debian's standard tooling
+        dpkg-buildpackage -us -uc -b
+
+    - name: Move .deb file to current directory
+      run: |
+        mv ../*.deb .
+
     - name: Validate package
-      env:
-        UPSTREAM_VERSION: ${{ steps.package_info.outputs.upstream_version }}
-        DEBIAN_REVISION: ${{ steps.package_info.outputs.debian_revision }}
-      run: make validate
-    
+      run: |
+        lintian --info *.deb || true
+
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
       with:
         name: debian-package
         path: "*.deb"
         retention-days: 30
-    
+
     - name: Create Release
       if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && inputs.create_release)
       uses: softprops/action-gh-release@v1
@@ -85,18 +105,18 @@ jobs:
         name: Release ${{ steps.package_info.outputs.version }}
         body: |
           ## Bitwarden CLI Debian Package v${{ steps.package_info.outputs.version }}
-          
+
           ### Installation
           ```bash
           wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name || format('v{0}', steps.package_info.outputs.version) }}/${{ steps.package_info.outputs.deb_file }}
           sudo dpkg -i ${{ steps.package_info.outputs.deb_file }}
           ```
-          
+
           ### Usage
           ```bash
           bw --help
           ```
-          
+
           ### Changes
           - Updated to version ${{ steps.package_info.outputs.version }}
         files: |

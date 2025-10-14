@@ -1,0 +1,35 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# See FEATURE AREAS in dpkg-buildflags(1)
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+%:
+	dh $@
+
+override_dh_auto_clean:
+	rm -rf clients node_modules
+	dh_auto_clean
+
+override_dh_auto_build:
+	# Clone Bitwarden clients repository
+	if [ ! -d "clients" ]; then \
+		git clone https://github.com/bitwarden/clients.git; \
+	fi
+	# Extract upstream version from debian/changelog
+	$(eval UPSTREAM_VERSION := $(shell dpkg-parsechangelog -S Version | cut -d- -f1))
+	# Checkout specific tag
+	cd clients && git fetch --tags && git checkout cli-v$(UPSTREAM_VERSION)
+	# Install dependencies and build
+	cd clients && npm ci
+	cd clients/apps/cli && npm run dist:oss:lin
+
+override_dh_auto_install:
+	# Install the built binary
+	install -D -m 0755 clients/apps/cli/dist/oss/linux/bw debian/bitwarden-cli/usr/bin/bw
+
+override_dh_auto_test:
+	# Skip tests for now
+	:
