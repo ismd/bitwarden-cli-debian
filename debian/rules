@@ -10,25 +10,25 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 	dh $@
 
 override_dh_auto_clean:
-	rm -rf clients node_modules
+	rm -rf node_modules apps/cli/node_modules apps/cli/build apps/cli/dist
 	dh_auto_clean
 
 override_dh_auto_build:
-	# Clone Bitwarden clients repository
-	if [ ! -d "clients" ]; then \
-		git clone https://github.com/bitwarden/clients.git; \
-	fi
-	# Extract upstream version from debian/changelog
-	$(eval UPSTREAM_VERSION := $(shell dpkg-parsechangelog -S Version | cut -d- -f1))
-	# Checkout specific tag
-	cd clients && git fetch --tags && git checkout cli-v$(UPSTREAM_VERSION)
-	# Install dependencies and build
-	cd clients && npm ci
-	cd clients/apps/cli && npm run dist:oss:lin
+	# APPROACH: Build from source
+	# The orig.tar.gz should contain the full Bitwarden clients source code
+	# This expects the source structure from bitwarden/clients repository
+
+	@echo "Installing dependencies..."
+	npm ci
+
+	@echo "Building CLI..."
+	cd apps/cli && npm run dist:oss:lin
+
+	@echo "Build completed successfully"
 
 override_dh_auto_install:
 	# Install the built binary
-	install -D -m 0755 clients/apps/cli/dist/oss/linux/bw debian/bitwarden-cli/usr/bin/bw
+	install -D -m 0755 apps/cli/dist/oss/linux/bw debian/bitwarden-cli/usr/bin/bw
 
 override_dh_auto_test:
 	# Skip tests for now

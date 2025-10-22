@@ -1,47 +1,42 @@
 # Bitwarden CLI Debian Package
 
-Debian package for the Bitwarden Command-line Interface (CLI).
+Debian packaging files for building Bitwarden CLI from source for submission to the Debian repository.
 
-## Installation
+## Quick Start
 
-### From GitHub Releases
+Build source package for Debian upload:
+
 ```bash
-wget https://github.com/ismd/bitwarden-cli-debian/releases/latest/download/bitwarden-cli_2025.9.0-1_all.deb
-sudo apt install ./bitwarden-cli_2025.9.0-1_all.deb
+make source-package VERSION=2025.8.0
+debsign ../bitwarden-cli_2025.8.0-1_source.changes
+dput ../bitwarden-cli_2025.8.0-1_source.changes
 ```
 
-### Build from Source
-```bash
-git clone https://github.com/ismd/bitwarden-cli-debian.git
-cd bitwarden-cli-debian
-UPSTREAM_VERSION=2025.9.0 make build
-UPSTREAM_VERSION=2025.9.0 make install
-```
+## Documentation
 
-## Development
+See [DEBIAN_PACKAGING.md](DEBIAN_PACKAGING.md) for detailed instructions.
 
-### Requirements
-```bash
-sudo apt-get install dpkg-dev lintian
-```
+## Workflow
 
-### Build Commands
-```bash
-UPSTREAM_VERSION=2025.9.0 make build     # Build package
-UPSTREAM_VERSION=2025.9.0 make validate  # Validate package
-make clean                               # Clean artifacts
-make help                                # Show all commands
-```
+1. **Fetch sources from git submodule and select required tag:**
+   ```bash
+   make prepare-source VERSION=2025.8.0
+   ```
 
-## Automated Builds
+2. **Build package for uploading to Debian:**
+   ```bash
+   make source-package VERSION=2025.8.0
+   ```
 
-Tagged releases automatically build packages via GitHub Actions:
-```bash
-git tag v2025.9.0-1
-git push origin v2025.9.0-1
-```
+## Repository Structure
+
+- `debian/` - Debian packaging files
+- `upstream-source/` - Git submodule pointing to bitwarden/clients
+- `Makefile` - Build helper for creating source packages
+- `DEBIAN_PACKAGING.md` - Detailed documentation
 
 ## Links
 
 - [Bitwarden CLI Documentation](https://bitwarden.com/help/cli/)
 - [Bitwarden CLI Source](https://github.com/bitwarden/clients/tree/main/apps/cli)
+- [Debian New Maintainers' Guide](https://www.debian.org/doc/manuals/maint-guide/)

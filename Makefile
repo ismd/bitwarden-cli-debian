@@ -1,66 +1,96 @@
 #!/usr/bin/make -f
 
-# Simplified Makefile for building with Debian tooling
+# Makefile for preparing Debian source package
 
 PACKAGE_NAME := bitwarden-cli
+VERSION ?= 2025.8.0
+REVISION ?= 1
+FULL_VERSION := $(VERSION)-$(REVISION)
 
-.PHONY: all build clean install uninstall help
+ORIG_TARBALL := ../bitwarden-cli_$(VERSION).orig.tar.gz
+BUILD_DIR := ../bitwarden-cli-$(VERSION)
 
-# Default target
-all: build
+.PHONY: help prepare-source source-package clean
 
-# Build the .deb package using Debian tooling
-build:
-	@echo "Building package using dpkg-buildpackage..."
-	dpkg-buildpackage -us -uc -b
-	@echo "Package built successfully"
-	@echo "Moving .deb file to current directory..."
-	@mv ../*.deb . 2>/dev/null || true
+help:
+	@echo "Debian Package Build Helper"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make prepare-source VERSION=2025.8.0 [REVISION=1]"
+	@echo "    - Fetch sources from git submodule"
+	@echo "    - Checkout tag cli-v\$${VERSION}"
+	@echo "    - Create orig.tar.gz"
+	@echo ""
+	@echo "  make source-package VERSION=2025.8.0 [REVISION=1]"
+	@echo "    - Prepare source package for Debian upload"
+	@echo "    - Creates .dsc, .debian.tar.xz, .changes files"
+	@echo ""
+	@echo "  make clean"
+	@echo "    - Remove build artifacts"
+	@echo ""
+	@echo "Example workflow:"
+	@echo "  make prepare-source VERSION=2025.8.0"
+	@echo "  make source-package VERSION=2025.8.0"
+	@echo ""
 
-# Clean build artifacts
+prepare-source:
+	@echo "==> Preparing source for version $(VERSION)"
+
+	@# Initialize/update submodule
+	@echo "Updating git submodule..."
+	git submodule update --init upstream-source
+
+	@# Checkout specific tag
+	@echo "Checking out tag cli-v$(VERSION)..."
+	cd upstream-source && git fetch --tags && git checkout cli-v$(VERSION)
+
+	@# Create orig.tar.gz
+	@echo "Creating $(ORIG_TARBALL)..."
+	tar czf $(ORIG_TARBALL) \
+		--transform "s,^upstream-source,bitwarden-cli-$(VERSION)," \
+		--exclude='.git' \
+		upstream-source/
+
+	@echo "==> Source prepared successfully!"
+	@echo "Created: $(ORIG_TARBALL)"
+
+source-package: prepare-source
+	@echo "==> Building source package $(FULL_VERSION)"
+
+	@# Extract orig tarball
+	@echo "Extracting source..."
+	cd .. && tar xzf bitwarden-cli_$(VERSION).orig.tar.gz
+
+	@# Copy debian directory
+	@echo "Copying debian/ directory..."
+	cp -r debian $(BUILD_DIR)/
+
+	@# Update changelog
+	@echo "Updating debian/changelog..."
+	cd $(BUILD_DIR) && \
+		dch -v $(FULL_VERSION) -D unstable "New upstream release $(VERSION)"
+
+	@# Build source package
+	@echo "Building source package..."
+	cd $(BUILD_DIR) && dpkg-buildpackage -S -sa
+
+	@echo ""
+	@echo "==> Source package built successfully!"
+	@echo ""
+	@echo "Files created in parent directory:"
+	@ls -lh ../bitwarden-cli_$(FULL_VERSION)*
+	@echo ""
+	@echo "To upload to Debian:"
+	@echo "  1. Sign: debsign ../bitwarden-cli_$(FULL_VERSION)_source.changes"
+	@echo "  2. Upload: dput ../bitwarden-cli_$(FULL_VERSION)_source.changes"
+
 clean:
 	@echo "Cleaning build artifacts..."
-	rm -f *.deb *.changes *.buildinfo
-	rm -rf clients node_modules debian/bitwarden-cli debian/.debhelper debian/files
-	rm -rf debian/debhelper-build-stamp
+	rm -rf $(BUILD_DIR)
+	rm -f ../bitwarden-cli_*.orig.tar.gz
+	rm -f ../bitwarden-cli_*.debian.tar.xz
+	rm -f ../bitwarden-cli_*.dsc
+	rm -f ../bitwarden-cli_*.changes
+	rm -f ../bitwarden-cli_*.buildinfo
+	rm -f ../bitwarden-cli_*.deb
 	@echo "Clean complete"
-
-# Install the package locally
-install:
-	@echo "Installing $(PACKAGE_NAME)..."
-	@if [ ! -f *.deb ]; then \
-		echo "Error: No .deb file found. Run 'make build' first."; \
-		exit 1; \
-	fi
-	sudo dpkg -i *.deb
-	@echo "Package installed successfully"
-
-# Uninstall the package
-uninstall:
-	@echo "Uninstalling $(PACKAGE_NAME)..."
-	sudo dpkg -r $(PACKAGE_NAME)
-	@echo "Package uninstalled successfully"
-
-# Validate the built package
-validate:
-	@echo "Validating package with lintian..."
-	@if [ ! -f *.deb ]; then \
-		echo "Error: No .deb file found. Run 'make build' first."; \
-		exit 1; \
-	fi
-	lintian --info *.deb || true
-	dpkg-deb --info *.deb
-	dpkg-deb --contents *.deb
-
-# Show help
-help:
-	@echo "Available targets:"
-	@echo "  build        - Build the .deb package using dpkg-buildpackage"
-	@echo "  clean        - Remove build artifacts"
-	@echo "  install      - Install the built package locally"
-	@echo "  uninstall    - Remove installed package"
-	@echo "  validate     - Validate built package with lintian"
-	@echo "  help         - Show this help message"
-	@echo ""
-	@echo "Note: Version is now managed in debian/changelog"
-	@echo "Edit debian/changelog to change the package version"
