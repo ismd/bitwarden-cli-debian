@@ -1,4 +1,12 @@
 version=4
+# NOTE: This watch file monitors upstream releases, but the orig.tar.gz
+# for this package must be specially prepared to include bundled node_modules.
+# After uscan detects a new version, you must:
+#   1. Download upstream source
+#   2. Run: npm ci
+#   3. Create orig.tar.gz with: debian/helpers/create-orig-tarball.sh
+# See debian/README.source for complete instructions.
+
 opts="filenamemangle=s%(?:.*?)?cli-v?(\d[\d.]*)\.tar\.gz%bitwarden-cli-$1.tar.gz%" \
 https://github.com/bitwarden/clients/tags \
 (?:.*?/)?cli-v?(\d[\d.]*)\.tar\.gz debian uupdate
