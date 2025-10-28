@@ -6,30 +6,79 @@
 # See FEATURE AREAS in dpkg-buildflags(1)
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
+# Prevent npm from trying to access the network
+export npm_config_offline = true
+export npm_config_fund = false
+export npm_config_audit = false
+export npm_config_update_notifier = false
+
 %:
 	dh $@
 
 override_dh_auto_clean:
-	rm -rf node_modules apps/cli/node_modules apps/cli/build apps/cli/dist
+	# Clean build artifacts but preserve bundled node_modules
+	rm -rf apps/cli/build apps/cli/dist
 	dh_auto_clean
 
 override_dh_auto_build:
-	# APPROACH: Build from source
-	# The orig.tar.gz should contain the full Bitwarden clients source code
-	# This expects the source structure from bitwarden/clients repository
+	# APPROACH: Build from source with bundled dependencies
+	# The orig.tar.gz MUST contain:
+	#   1. Full Bitwarden clients source code
+	#   2. Pre-installed node_modules/ directory with all dependencies
+	#
+	# This approach is acceptable for Debian when:
+	#   - Dependencies are properly documented in debian/copyright
+	#   - The number of dependencies makes individual packaging impractical
 
-	@echo "Installing dependencies..."
-	npm ci
+	@echo "=== Bitwarden CLI Build Process ==="
+	@echo "Checking for bundled dependencies..."
+	@if [ ! -d "node_modules" ]; then \
+		echo "ERROR: node_modules/ not found in source tree."; \
+		echo ""; \
+		echo "This package requires pre-bundled dependencies."; \
+		echo "To prepare the source:"; \
+		echo "  1. Run: npm ci"; \
+		echo "  2. Create orig tarball with: debian/helpers/create-orig-tarball.sh"; \
+		echo ""; \
+		exit 1; \
+	fi
+	@echo "✓ Found node_modules/ directory"
 
-	@echo "Building CLI..."
+	@echo ""
+	@echo "Building CLI application..."
 	cd apps/cli && npm run dist:oss:lin
 
-	@echo "Build completed successfully"
+	@echo ""
+	@echo "Verifying build output..."
+	@test -f apps/cli/dist/oss/linux/bw || \
+		(echo "ERROR: Build did not produce expected binary at apps/cli/dist/oss/linux/bw" && exit 1)
+	@echo "✓ Binary created successfully"
+
+	@echo ""
+	@echo "=== Build completed successfully ==="
 
 override_dh_auto_install:
-	# Install the built binary
-	install -D -m 0755 apps/cli/dist/oss/linux/bw debian/bitwarden-cli/usr/bin/bw
+	# Install the built binary to the package staging area
+	install -D -m 0755 apps/cli/dist/oss/linux/bw \
+		debian/bitwarden-cli/usr/bin/bw
+
+	# Verify the installed binary
+	@test -f debian/bitwarden-cli/usr/bin/bw || \
+		(echo "ERROR: Binary installation failed" && exit 1)
+
+override_dh_strip:
+	# DO NOT strip the binary!
+	# The bw binary is created by 'pkg' which bundles Node.js runtime and application
+	# resources into a single executable. Stripping this binary corrupts the embedded
+	# resources and causes "Pkg: Error reading from file." at runtime.
+	@echo "Skipping dh_strip (would corrupt pkg-bundled binary)"
 
 override_dh_auto_test:
-	# Skip tests for now
+	# Tests are skipped because:
+	# 1. Upstream build process doesn't include test execution in dist target
+	# 2. Tests require additional build environment setup not suitable for package build
+	# 3. Binary functionality can be tested via autopkgtest (debian/tests/)
+	#
+	# Future improvement: Add autopkgtest for smoke testing the installed binary
+	@echo "Skipping upstream tests (see debian/rules for rationale)"
 	:
