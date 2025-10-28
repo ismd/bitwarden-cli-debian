@@ -1,29 +1,57 @@
 #!/bin/bash
 # Helper script to create the orig.tar.gz with bundled dependencies
-# This script should be run from the repository root
+#
+# Usage:
+#   From inside source tree:  debian/helpers/create-orig-tarball.sh [VERSION] [OUTPUT_DIR]
+#   From outside source tree: /path/to/debian/helpers/create-orig-tarball.sh SOURCE_DIR [VERSION] [OUTPUT_DIR]
 
 set -e
 
+# Detect if first argument is a directory (source tree path)
+if [ -d "$1" ] && [ -f "$1/package.json" ]; then
+    SOURCE_DIR="$1"
+    shift
+else
+    SOURCE_DIR="."
+fi
+
 # Configuration
 PACKAGE_NAME="bitwarden-cli"
-VERSION=${1:-$(dpkg-parsechangelog -S Version | cut -d- -f1)}
-OUTPUT_DIR=${2:-..}
+VERSION=${1}
+OUTPUT_DIR=${2:-$(dirname "$(realpath "${SOURCE_DIR}")")}
+
+# Convert to absolute path
+OUTPUT_DIR=$(realpath "${OUTPUT_DIR}")
+
+# Auto-detect version if not provided
+if [ -z "$VERSION" ]; then
+    if [ -f "${SOURCE_DIR}/debian/changelog" ]; then
+        VERSION=$(cd "${SOURCE_DIR}" && dpkg-parsechangelog -S Version | cut -d- -f1)
+    elif [ -f "${SOURCE_DIR}/apps/cli/package.json" ]; then
+        VERSION=$(jq -r '.version' "${SOURCE_DIR}/apps/cli/package.json")
+    else
+        echo "ERROR: Could not auto-detect version. Please provide VERSION as argument."
+        exit 1
+    fi
+fi
 
 echo "=== Creating orig tarball for ${PACKAGE_NAME} ${VERSION} ==="
+echo "Source directory: ${SOURCE_DIR}"
+echo "Output directory: ${OUTPUT_DIR}"
 echo ""
 
-# Check we're in the right place
-if [ ! -f "debian/control" ]; then
-    echo "ERROR: Must be run from repository root (where debian/ directory is)"
+# Check if source directory has required files
+if [ ! -f "${SOURCE_DIR}/package.json" ]; then
+    echo "ERROR: ${SOURCE_DIR} does not look like Bitwarden clients source (no package.json)"
     exit 1
 fi
 
 # Check if node_modules exists
-if [ ! -d "node_modules" ]; then
-    echo "ERROR: node_modules/ not found!"
+if [ ! -d "${SOURCE_DIR}/node_modules" ]; then
+    echo "ERROR: node_modules/ not found in ${SOURCE_DIR}!"
     echo ""
     echo "Please run first:"
-    echo "  npm ci"
+    echo "  cd ${SOURCE_DIR} && npm ci"
     echo ""
     exit 1
 fi
@@ -56,7 +84,7 @@ rsync -av \
     --exclude='apps/cli/dist' \
     --exclude='.npm' \
     --exclude='.cache' \
-    ./ "${TARBALL_DIR}/"
+    "${SOURCE_DIR}/" "${TARBALL_DIR}/"
 
 echo ""
 echo "Checking tarball contents..."

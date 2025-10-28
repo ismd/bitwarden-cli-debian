@@ -9,7 +9,7 @@ Build Approach
 This package builds the Bitwarden CLI from source with pre-bundled npm
 dependencies. This approach is necessary because:
 
-1. Bitwarden CLI has 500+ npm dependencies
+1. Bitwarden CLI has extensive npm dependencies (hundreds of packages)
 2. Most of these dependencies are not packaged for Debian
 3. Packaging each dependency individually would be impractical
 4. The bundled approach is acceptable for Debian when properly documented
@@ -45,28 +45,48 @@ This will:
 
 To create a proper orig.tar.gz for Debian:
 
-1. Clone the repository and install dependencies:
+1. Clone the repository and checkout the specific version tag:
 
-    git clone https://github.com/bitwarden/clients.git bitwarden-cli-2025.8.0
-    cd bitwarden-cli-2025.8.0
+    VERSION=YYYY.MM.P  # Replace with desired version, e.g., 2025.10.1
+    git clone https://github.com/bitwarden/clients.git bitwarden-cli-${VERSION}
+    cd bitwarden-cli-${VERSION}
+    git checkout cli-v${VERSION}
+
+   Note: Bitwarden CLI releases are tagged as "cli-vX.Y.Z" in the clients repo.
+   You can find available tags at: https://github.com/bitwarden/clients/tags
+
+2. Install dependencies:
+
     npm ci
-
-2. Copy the debian/ directory into the source:
-
-    cp -r /path/to/packaging/debian .
 
 3. Create the orig.tar.gz:
 
+    # Option A: Copy helper script temporarily (will be excluded from tarball)
+    cp -r /path/to/packaging/debian .
     debian/helpers/create-orig-tarball.sh
 
-This creates: ../bitwarden-cli_2025.8.0.orig.tar.gz (with node_modules/)
+    # Option B: Run helper script from packaging repo directly
+    /path/to/packaging/debian/helpers/create-orig-tarball.sh $(pwd)
 
-4. Extract and build:
+   This creates: ../bitwarden-cli_${VERSION}.orig.tar.gz (with node_modules/)
+   Note: debian/ is automatically excluded from the tarball.
+
+### Building from the Source Tarball
+
+Once you have the orig.tar.gz:
+
+1. Extract the tarball:
 
     cd ..
-    tar xzf bitwarden-cli_2025.8.0.orig.tar.gz
-    cd bitwarden-cli-2025.8.0
+    tar xzf bitwarden-cli_${VERSION}.orig.tar.gz
+    cd bitwarden-cli-${VERSION}
+
+2. Add the debian/ packaging:
+
     cp -r /path/to/packaging/debian .
+
+3. Build the package:
+
     dpkg-buildpackage -us -uc -b
 
 Documenting Dependencies
