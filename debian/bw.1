@@ -1,0 +1,180 @@
+.TH BW 1 "2025-10-28" "Bitwarden CLI" "User Commands"
+.SH NAME
+bw \- Bitwarden command-line interface
+.SH SYNOPSIS
+.B bw
+[\fB\-\-help\fR]
+[\fB\-\-version\fR]
+.IR command
+[\fIoptions\fR]
+.SH DESCRIPTION
+The Bitwarden CLI is a powerful, full-featured command-line interface (CLI)
+tool to access and manage a Bitwarden vault. The CLI is written with
+TypeScript and Node.js and can be used to access and manage your Bitwarden
+vault from the terminal.
+.PP
+Bitwarden is a free and open-source password management service that stores
+sensitive information such as website credentials in an encrypted vault.
+.SH COMMANDS
+.TP
+.B login
+Log into a user account.
+.TP
+.B logout
+Log out of the current user account.
+.TP
+.B unlock
+Unlock the vault.
+.TP
+.B lock
+Lock the vault.
+.TP
+.B sync
+Sync the vault with the server.
+.TP
+.B list
+List items in the vault (items, folders, collections, organizations).
+.TP
+.B get
+Get an item from the vault.
+.TP
+.B create
+Create a new item in the vault.
+.TP
+.B edit
+Edit an existing item in the vault.
+.TP
+.B delete
+Delete an item from the vault.
+.TP
+.B restore
+Restore a deleted item.
+.TP
+.B share
+Share an item with an organization.
+.TP
+.B confirm
+Confirm a user to an organization.
+.TP
+.B import
+Import vault data from a file.
+.TP
+.B export
+Export vault data to a file.
+.TP
+.B generate
+Generate a password or passphrase.
+.TP
+.B encode
+Base64 encode a string.
+.TP
+.B config
+Configure CLI settings.
+.TP
+.B update
+Check for updates to the CLI.
+.TP
+.B status
+Show vault status.
+.TP
+.B serve
+Start a RESTful API webserver.
+.SH OPTIONS
+.TP
+.B \-\-help
+Display help information.
+.TP
+.B \-\-version
+Display version information.
+.TP
+.B \-\-pretty
+Format output with indentation and line breaks.
+.TP
+.B \-\-raw
+Return raw output with minimal formatting.
+.TP
+.B \-\-response
+Return a JSON formatted response.
+.TP
+.B \-\-session <session>
+Pass session key instead of reading from environment.
+.TP
+.B \-\-apikey
+Use API key authentication.
+.TP
+.B \-\-nointeraction
+Do not prompt for interactive input.
+.SH ENVIRONMENT
+.TP
+.B BW_SESSION
+Session key for authenticated commands. Set this environment variable
+to avoid having to pass \fB\-\-session\fR with each command.
+.TP
+.B BW_CLIENTID
+Client ID for API key authentication.
+.TP
+.B BW_CLIENTSECRET
+Client secret for API key authentication.
+.TP
+.B BW_PASSWORD
+Master password (use with caution).
+.TP
+.B BW_SERVE_HOSTNAME
+Hostname for serve command (default: localhost).
+.TP
+.B BW_SERVE_PORT
+Port for serve command (default: 8087).
+.TP
+.B BW_RESPONSE
+Set to "true" to enable JSON response format by default.
+.TP
+.B BW_CLEANEXIT
+Set to "true" to always exit with code 0.
+.TP
+.B BW_QUIET
+Suppress output.
+.SH EXAMPLES
+.TP
+Log in to your Bitwarden account:
+.B bw login
+.TP
+Unlock your vault:
+.B bw unlock
+.TP
+List all items in your vault:
+.B bw list items
+.TP
+Get a specific item by ID:
+.B bw get item <item-id>
+.TP
+Generate a password:
+.B bw generate \-\-length 20 \-\-uppercase \-\-lowercase \-\-number \-\-special
+.TP
+Export vault data:
+.B bw export \-\-output /path/to/export.json
+.TP
+Start the API server:
+.B bw serve
+.SH FILES
+.TP
+.I ~/.config/Bitwarden\ CLI/data.json
+Default location for vault data.
+.SH SEE ALSO
+Full documentation available at:
+.BR https://bitwarden.com/help/cli/
+.PP
+GitHub repository:
+.BR https://github.com/bitwarden/clients
+.SH AUTHOR
+Bitwarden Inc. <hello@bitwarden.com>
+.SH COPYRIGHT
+Copyright \(co 2015-2025 Bitwarden Inc.
+.PP
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, version 3.
+.PP
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
