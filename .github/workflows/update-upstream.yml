@@ -1,0 +1,233 @@
+name: Update Upstream Sources
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Upstream version tag (e.g., cli-v2025.10.1)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-upstream:
+    name: Import upstream version and create PR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Validate version format
+        id: validate
+        run: |
+          VERSION="${{ inputs.version }}"
+
+          if [[ ! "${VERSION}" =~ ^cli-v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Invalid version format: ${VERSION}"
+            echo "Expected format: cli-vX.Y.Z (e.g., cli-v2025.10.1)"
+            exit 1
+          fi
+
+          # Extract numeric version for debian changelog
+          NUMERIC_VERSION=$(echo "${VERSION}" | sed 's/cli-v//')
+          echo "numeric_version=${NUMERIC_VERSION}" >> $GITHUB_OUTPUT
+
+          echo "✓ Version format valid: ${VERSION}"
+
+      - name: Check if branch already exists
+        id: check-branch
+        run: |
+          BRANCH="upstream-update/${{ inputs.version }}"
+
+          if git ls-remote --exit-code --heads origin "${BRANCH}" >/dev/null 2>&1; then
+            echo "branch_exists=true" >> $GITHUB_OUTPUT
+            echo "⚠ Branch ${BRANCH} already exists"
+          else
+            echo "branch_exists=false" >> $GITHUB_OUTPUT
+            echo "✓ Branch ${BRANCH} does not exist"
+          fi
+
+      - name: Create update branch
+        if: steps.check-branch.outputs.branch_exists == 'false'
+        run: |
+          BRANCH="upstream-update/${{ inputs.version }}"
+          git checkout -b "${BRANCH}"
+          echo "Created branch: ${BRANCH}"
+
+      - name: Run import script
+        if: steps.check-branch.outputs.branch_exists == 'false'
+        run: |
+          echo "Importing upstream version: ${{ inputs.version }}"
+          .packaging/import-upstream.sh "${{ inputs.version }}"
+
+      - name: Update debian/changelog
+        if: steps.check-branch.outputs.branch_exists == 'false'
+        run: |
+          VERSION="${{ steps.validate.outputs.numeric_version }}"
+          CURRENT_REVISION=$(head -n1 debian/changelog | grep -oP '\-\K[0-9]+' || echo "0")
+          NEW_REVISION=$((CURRENT_REVISION + 1))
+          NEW_VERSION="${VERSION}-${NEW_REVISION}"
+          DATE=$(date -R)
+
+          # Create new changelog entry
+          cat > debian/changelog.new <<EOF
+bitwarden-cli (${NEW_VERSION}) UNRELEASED; urgency=medium
+
+  * New upstream release ${{ inputs.version }}
+  * TODO: Review changes and update this entry before merge
+
+ -- Vladimir Kosteley <debian@ismd.dev>  ${DATE}
+
+EOF
+
+          # Append old changelog
+          cat debian/changelog >> debian/changelog.new
+          mv debian/changelog.new debian/changelog
+
+          echo "Updated debian/changelog to version ${NEW_VERSION}"
+
+      - name: Check for changes
+        if: steps.check-branch.outputs.branch_exists == 'false'
+        id: changes
+        run: |
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "⚠ No changes detected"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "✓ Changes detected"
+
+            # Show summary of changes
+            echo "## Changes Summary" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            git status --short >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Commit changes
+        if: steps.check-branch.outputs.branch_exists == 'false' && steps.changes.outputs.has_changes == 'true'
+        run: |
+          git add .
+          git commit -m "chore: import upstream ${{ inputs.version }}
+
+          Automated import of upstream Bitwarden CLI sources.
+
+          - Upstream version: ${{ inputs.version }}
+          - Import date: $(date -u +'%Y-%m-%d')
+          - Import script: .packaging/import-upstream.sh
+
+          Changes:
+          - Imported upstream sources
+          - Updated .packaging/current-version.txt
+          - Updated debian/changelog (needs review)
+          - Generated .packaging/imported-manifest.txt
+
+          This PR was created automatically by the update-upstream workflow."
+
+      - name: Push branch
+        if: steps.check-branch.outputs.branch_exists == 'false' && steps.changes.outputs.has_changes == 'true'
+        run: |
+          BRANCH="upstream-update/${{ inputs.version }}"
+          git push -u origin "${BRANCH}"
+          echo "✓ Pushed branch: ${BRANCH}"
+
+      - name: Fetch upstream release notes
+        if: steps.check-branch.outputs.branch_exists == 'false' && steps.changes.outputs.has_changes == 'true'
+        id: release-notes
+        run: |
+          # Fetch release notes from GitHub API
+          RELEASE_DATA=$(curl -s "https://api.github.com/repos/bitwarden/clients/releases/tags/${{ inputs.version }}")
+
+          RELEASE_NAME=$(echo "${RELEASE_DATA}" | jq -r '.name // "N/A"')
+          RELEASE_URL=$(echo "${RELEASE_DATA}" | jq -r '.html_url // "N/A"')
+          RELEASE_DATE=$(echo "${RELEASE_DATA}" | jq -r '.published_at // "N/A"')
+          RELEASE_BODY=$(echo "${RELEASE_DATA}" | jq -r '.body // "No release notes available"' | head -c 5000)
+
+          # Save to file for PR body (to avoid quoting issues)
+          cat > /tmp/release-notes.txt <<EOF
+          ${RELEASE_BODY}
+          EOF
+
+          echo "release_name=${RELEASE_NAME}" >> $GITHUB_OUTPUT
+          echo "release_url=${RELEASE_URL}" >> $GITHUB_OUTPUT
+          echo "release_date=${RELEASE_DATE}" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.check-branch.outputs.branch_exists == 'false' && steps.changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RELEASE_NOTES=$(cat /tmp/release-notes.txt)
+
+          gh pr create \
+            --title "Update upstream sources to ${{ inputs.version }}" \
+            --body "## Upstream Update: ${{ inputs.version }}
+
+          This PR imports upstream Bitwarden CLI sources for version **${{ inputs.version }}**.
+
+          ### Release Information
+
+          - **Version:** ${{ inputs.version }}
+          - **Release name:** ${{ steps.release-notes.outputs.release_name }}
+          - **Release date:** ${{ steps.release-notes.outputs.release_date }}
+          - **Release URL:** ${{ steps.release-notes.outputs.release_url }}
+
+          ### Changes
+
+          - ✅ Imported upstream sources using \`.packaging/import-upstream.sh\`
+          - ✅ Updated \`.packaging/current-version.txt\`
+          - ✅ Generated \`.packaging/imported-manifest.txt\`
+          - ⚠️ Updated \`debian/changelog\` (needs review)
+
+          ### Upstream Release Notes
+
+          <details>
+          <summary>Click to expand</summary>
+
+          ${RELEASE_NOTES}
+
+          </details>
+
+          ### Maintainer Checklist
+
+          Before merging:
+
+          - [ ] Review imported sources for unexpected changes
+          - [ ] Update \`debian/changelog\` with proper entry
+          - [ ] Test build: \`dpkg-buildpackage -b -us -uc\`
+          - [ ] Test in clean environment: \`sbuild\`
+          - [ ] Run lintian: \`lintian -i ../bitwarden-cli_*.changes\`
+          - [ ] Update \`debian/copyright\` if new dependencies added
+          - [ ] Verify man page is still accurate
+
+          ---
+
+          *This PR was created automatically by the \`update-upstream\` workflow.*" \
+            --label "upstream-update" \
+            --label "automated"
+
+      - name: Summary
+        run: |
+          echo "## Update Upstream Workflow" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** upstream-update/${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.changes.outputs.has_changes }}" = "true" ]; then
+            echo "- **Status:** ✅ PR created successfully" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.check-branch.outputs.branch_exists }}" = "true" ]; then
+            echo "- **Status:** ⚠️ Branch already exists" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Status:** ⚠️ No changes detected" >> $GITHUB_STEP_SUMMARY
+          fi

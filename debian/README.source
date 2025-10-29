@@ -3,6 +3,19 @@ Bitwarden CLI for Debian
 
 This package uses bundled npm dependencies in the source tarball.
 
+Repository Structure
+-------------------
+
+This is a **mixed repository** containing both upstream sources and Debian
+packaging:
+
+- Upstream sources (apps/, libs/, package.json, etc.) are automatically
+  imported from https://github.com/bitwarden/clients
+- Debian packaging (debian/) is maintained separately
+- GitHub Actions automate upstream version monitoring and imports
+
+For details on upstream synchronization, see: debian/UPSTREAM-SYNC.md
+
 Build Approach
 --------------
 
@@ -164,6 +177,40 @@ Common warnings for bundled dependencies:
 - source-is-missing: May occur for minified files in node_modules/
 - very-long-line-length-in-source-file: Common in node_modules/
 
+Upstream Source Management
+-------------------------
+
+This repository tracks upstream sources directly via automated import.
+
+### Checking for Updates
+
+Manual check:
+
+    .packaging/check-upstream-version.sh
+
+Automated check:
+- GitHub Actions runs daily to check for new releases
+- See .github/workflows/check-upstream.yml
+
+### Importing New Version
+
+Manual import:
+
+    .packaging/import-upstream.sh cli-vX.Y.Z
+
+Automated import:
+- Triggered automatically when new version detected
+- Creates PR with changes
+- See .github/workflows/update-upstream.yml
+
+### What Gets Imported
+
+- ✅ Imported as-is: apps/, libs/, package.json, LICENSE files
+- 📝 Renamed with .upstream: README.md, CONTRIBUTING.md, config files
+- 🚫 Never imported: debian/, .github/, our README.md
+
+For complete details, see: debian/UPSTREAM-SYNC.md
+
 For Debian Maintainers
 ---------------------
 
@@ -176,10 +223,17 @@ When preparing for upload to Debian:
 5. File an ITP (Intent To Package) bug if not done
 6. Have the package reviewed by a Debian Developer
 
+Related Documentation
+--------------------
+
+- debian/UPSTREAM-SYNC.md - Upstream source synchronization
+- debian/TESTING-CLEAN-BUILD.md - Clean environment testing
+- debian/LINTIAN-NOTES.md - Lintian issues and resolutions
+
 Helpful Resources:
 
 - Debian Node.js Team: https://wiki.debian.org/Javascript/Nodejs
 - Debian Policy: https://www.debian.org/doc/debian-policy/
 - New Maintainer's Guide: https://www.debian.org/doc/manuals/maint-guide/
 
- -- Vladimir Kosteley <debian@ismd.dev>  Mon, 27 Oct 2025 21:45:00 +0000
+ -- Vladimir Kosteley <debian@ismd.dev>  Tue, 29 Oct 2025 12:00:00 +0000
