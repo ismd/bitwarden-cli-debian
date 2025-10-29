@@ -223,9 +223,12 @@ done
 print_header "Step 5: Importing upstream sources"
 print_info "Copying from ${TEMP_DIR}"
 print_info "Copying to ${REPO_ROOT}"
+print_warning "Files deleted upstream will be removed from repository"
 
 # Use rsync for efficient copying with excludes
-rsync -av "${RSYNC_EXCLUDES[@]}" "${TEMP_DIR}/" "${REPO_ROOT}/"
+# --delete removes files in destination that don't exist in source
+# --exclude patterns protect our packaging files from being deleted
+rsync -av --delete "${RSYNC_EXCLUDES[@]}" "${TEMP_DIR}/" "${REPO_ROOT}/"
 
 if [ $? -ne 0 ]; then
     print_error "Failed to import sources"
