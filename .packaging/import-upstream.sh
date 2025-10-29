@@ -204,13 +204,28 @@ for path in "${PROTECTED_PATHS[@]}"; do
     print_info "Protecting: ${path}"
 done
 
-# Step 4: Import everything except protected paths
-print_header "Step 4: Importing upstream sources"
+# Step 4: Rename Tier 2 files (add .upstream suffix) BEFORE importing
+print_header "Step 4: Renaming conflicting config files"
+
+for file in "${RENAME_UPSTREAM[@]}"; do
+    SOURCE_PATH="${TEMP_DIR}/${file}"
+    DEST_PATH="${TEMP_DIR}/${file}.upstream"
+
+    # Check if file/directory exists in upstream sources
+    if [ -e "${SOURCE_PATH}" ]; then
+        # Rename to .upstream in temp directory
+        mv "${SOURCE_PATH}" "${DEST_PATH}"
+        print_info "Renamed: ${file} → ${file}.upstream"
+    fi
+done
+
+# Step 5: Import everything except protected paths
+print_header "Step 5: Importing upstream sources"
 print_info "Copying from ${TEMP_DIR}"
 print_info "Copying to ${REPO_ROOT}"
 
 # Use rsync for efficient copying with excludes
-rsync -av --delete-excluded "${RSYNC_EXCLUDES[@]}" "${TEMP_DIR}/" "${REPO_ROOT}/"
+rsync -av "${RSYNC_EXCLUDES[@]}" "${TEMP_DIR}/" "${REPO_ROOT}/"
 
 if [ $? -ne 0 ]; then
     print_error "Failed to import sources"
@@ -218,26 +233,6 @@ if [ $? -ne 0 ]; then
 fi
 
 print_info "Import complete"
-
-# Step 5: Rename Tier 2 files (add .upstream suffix)
-print_header "Step 5: Renaming conflicting config files"
-
-for file in "${RENAME_UPSTREAM[@]}"; do
-    SOURCE_PATH="${REPO_ROOT}/${file}"
-    DEST_PATH="${REPO_ROOT}/${file}.upstream"
-
-    # Check if file/directory exists in imported sources
-    if [ -e "${SOURCE_PATH}" ]; then
-        # Remove old .upstream version if it exists
-        if [ -e "${DEST_PATH}" ]; then
-            rm -rf "${DEST_PATH}"
-        fi
-
-        # Rename to .upstream
-        mv "${SOURCE_PATH}" "${DEST_PATH}"
-        print_info "Renamed: ${file} → ${file}.upstream"
-    fi
-done
 
 # Step 6: Handle upstream README specially
 print_header "Step 6: Handling upstream README"
