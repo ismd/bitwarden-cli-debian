@@ -139,18 +139,19 @@ jobs:
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "</details>" >> $GITHUB_STEP_SUMMARY
 
+      - name: Prepare artifacts for upload
+        if: steps.build.outputs.build_success == 'true'
+        run: |
+          mkdir -p artifacts
+          cp ../*.deb ../*.buildinfo ../*.changes artifacts/ 2>/dev/null || true
+          cp build.log lintian.log package-contents.txt artifacts/ 2>/dev/null || true
+
       - name: Upload build artifacts
         if: steps.build.outputs.build_success == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: debian-package
-          path: |
-            ../*.deb
-            ../*.buildinfo
-            ../*.changes
-            build.log
-            lintian.log
-            package-contents.txt
+          path: artifacts/
           retention-days: 14
 
       - name: Comment on PR
