@@ -12,12 +12,20 @@ export npm_config_fund = false
 export npm_config_audit = false
 export npm_config_update_notifier = false
 
+# Set pkg cache to writable location within build directory
+# The 'pkg' tool needs to cache Node.js binaries. In sbuild, HOME is set to
+# /sbuild-nonexistent which is not writable. We override PKG_CACHE_PATH to
+# use a directory within the build tree.
+export PKG_CACHE_PATH = $(CURDIR)/.pkg-cache
+
 %:
 	dh $@
 
 override_dh_auto_clean:
 	# Clean build artifacts but preserve bundled node_modules
 	rm -rf apps/cli/build apps/cli/dist
+	# Clean pkg cache directory
+	rm -rf .pkg-cache
 	dh_auto_clean
 
 override_dh_auto_build:

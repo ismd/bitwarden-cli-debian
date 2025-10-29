@@ -43,6 +43,9 @@ build/
 coverage/
 *.tsbuildinfo
 
+# pkg tool cache (used during binary creation)
+.pkg-cache/
+
 # ============================================================================
 # Packaging Automation
 # ============================================================================
