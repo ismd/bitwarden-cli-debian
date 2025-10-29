@@ -70,18 +70,6 @@ jobs:
             exit 1
           fi
 
-      - name: Debug - Check parent directory
-        if: steps.build.outputs.build_success == 'true'
-        run: |
-          echo "Current directory: $(pwd)"
-          echo "Parent directory contents:"
-          ls -la ..
-
-      - name: Debug - Find all .deb files
-        if: steps.build.outputs.build_success == 'true'
-        run: |
-          find . -name "*.deb" -o -name "*.changes" -o -name "*.buildinfo"
-
       - name: List generated files
         if: steps.build.outputs.build_success == 'true'
         run: |
