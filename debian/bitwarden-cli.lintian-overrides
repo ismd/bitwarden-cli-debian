@@ -25,3 +25,13 @@ bitwarden-cli: hardening-no-pie [usr/bin/bw]
 # an upstream build limitation from the 'pkg' tool. The binary is
 # a standalone executable with embedded Node.js runtime.
 bitwarden-cli: hardening-no-fortify-functions [usr/bin/bw]
+
+# Playwright packages are development dependencies used only for browser
+# testing in the upstream project. They are not used in the CLI binary
+# and their NOTICE files are not relevant to the distributed package.
+bitwarden-cli: missing-notice-file-for-apache-license node_modules/playwright-core/NOTICE
+bitwarden-cli: missing-notice-file-for-apache-license node_modules/playwright/NOTICE
+
+# This is an unofficial Debian package for personal/testing use and is not
+# being uploaded to the official Debian archive, so no ITP bug is required.
+bitwarden-cli: initial-upload-closes-no-bugs
