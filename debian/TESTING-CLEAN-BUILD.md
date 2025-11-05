@@ -116,8 +116,8 @@ export VERSION=X.Y.Z  # Replace with actual version, e.g., 2025.10.1
 cd /tmp  # Use a temporary location for this step
 git clone --depth 1 --branch cli-v${VERSION} \
   https://github.com/bitwarden/clients.git \
-  bitwarden-cli-${VERSION}-tmp
-cd bitwarden-cli-${VERSION}-tmp
+  bitwarden-cli-${VERSION}
+cd bitwarden-cli-${VERSION}
 npm ci
 
 # Create orig.tar.gz with bundled dependencies
@@ -418,8 +418,8 @@ tar xzf bitwarden-cli_X.Y.Z.orig.tar.gz  # Overwrites/merges with existing dir!
 
 # ✅ CORRECT - extract in different location
 cd /tmp
-git clone ... bitwarden-cli-X.Y.Z-tmp
-cd bitwarden-cli-X.Y.Z-tmp
+git clone ... bitwarden-cli-X.Y.Z
+cd bitwarden-cli-X.Y.Z
 npm ci
 create-orig-tarball.sh
 mv ../bitwarden-cli_X.Y.Z.orig.tar.gz ~/build/
@@ -512,8 +512,8 @@ sudo sbuild-createchroot unstable /srv/chroot/unstable-amd64-sbuild http://deb.d
 export VERSION=X.Y.Z  # Replace with actual version, e.g., 2025.10.1
 cd /tmp
 git clone --depth 1 --branch cli-v${VERSION} \
-  https://github.com/bitwarden/clients.git bitwarden-cli-${VERSION}-tmp
-cd bitwarden-cli-${VERSION}-tmp
+  https://github.com/bitwarden/clients.git bitwarden-cli-${VERSION}
+cd bitwarden-cli-${VERSION}
 npm ci
 /path/to/debian/helpers/create-orig-tarball.sh
 mv ../bitwarden-cli_${VERSION}.orig.tar.gz ~/build/
