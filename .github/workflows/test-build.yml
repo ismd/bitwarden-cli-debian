@@ -1,0 +1,223 @@
+name: Test Build
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'debian/**'
+      - 'apps/**'
+      - 'libs/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/test-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  build-test:
+    name: Test Debian Package Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            debhelper-compat \
+            devscripts \
+            lintian \
+            nodejs \
+            npm
+
+      - name: Show versions
+        run: |
+          echo "## Build Environment" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "Node.js: $(node --version)" >> $GITHUB_STEP_SUMMARY
+          echo "npm: $(npm --version)" >> $GITHUB_STEP_SUMMARY
+          echo "dpkg-buildpackage: $(dpkg-buildpackage --version | head -n1)" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+          node --version
+          npm --version
+          dpkg-buildpackage --version | head -n1
+
+      - name: Install npm dependencies
+        run: |
+          echo "Installing npm dependencies..."
+          npm ci
+          echo "✓ npm dependencies installed"
+
+      - name: Build binary package
+        id: build
+        run: |
+          echo "Building Debian package..."
+          dpkg-buildpackage -b -us -uc 2>&1 | tee build.log
+
+          if [ ${PIPESTATUS[0]} -eq 0 ]; then
+            echo "build_success=true" >> $GITHUB_OUTPUT
+            echo "✓ Build successful"
+          else
+            echo "build_success=false" >> $GITHUB_OUTPUT
+            echo "✗ Build failed"
+            exit 1
+          fi
+
+      - name: List generated files
+        if: steps.build.outputs.build_success == 'true'
+        run: |
+          echo "## Generated Files" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          ls -lh ../*.deb ../*.buildinfo ../*.changes 2>/dev/null || echo "No files found"
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+          ls -lh ../*.deb ../*.buildinfo ../*.changes 2>/dev/null || true
+
+      - name: Run lintian checks
+        if: steps.build.outputs.build_success == 'true'
+        id: lintian
+        run: |
+          echo "Running lintian..."
+          lintian -i ../*.changes 2>&1 | tee lintian.log
+
+          # lintian exits with non-zero on any issues, but we want to continue
+          LINTIAN_EXIT=${PIPESTATUS[0]}
+
+          if [ ${LINTIAN_EXIT} -eq 0 ]; then
+            echo "lintian_clean=true" >> $GITHUB_OUTPUT
+            echo "✓ Lintian: No issues found"
+          else
+            echo "lintian_clean=false" >> $GITHUB_OUTPUT
+            echo "⚠ Lintian: Issues found (see log)"
+          fi
+
+      - name: Parse lintian results
+        if: steps.build.outputs.build_success == 'true'
+        run: |
+          if [ -f lintian.log ]; then
+            ERROR_COUNT=$(grep -c "^E: " lintian.log || true)
+            WARNING_COUNT=$(grep -c "^W: " lintian.log || true)
+            INFO_COUNT=$(grep -c "^I: " lintian.log || true)
+
+            echo "## Lintian Results" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **Errors:** ${ERROR_COUNT}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Warnings:** ${WARNING_COUNT}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Info:** ${INFO_COUNT}" >> $GITHUB_STEP_SUMMARY
+
+            if [ ${ERROR_COUNT} -gt 0 ] || [ ${WARNING_COUNT} -gt 0 ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "<details>" >> $GITHUB_STEP_SUMMARY
+              echo "<summary>Lintian Output</summary>" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              cat lintian.log >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              echo "</details>" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+      - name: Check package contents
+        if: steps.build.outputs.build_success == 'true'
+        run: |
+          echo "Checking package contents..."
+          dpkg -c ../*.deb > package-contents.txt
+
+          echo "## Package Contents" >> $GITHUB_STEP_SUMMARY
+          echo "<details>" >> $GITHUB_STEP_SUMMARY
+          echo "<summary>Click to expand</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          cat package-contents.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY
+
+      - name: Prepare artifacts for upload
+        if: steps.build.outputs.build_success == 'true'
+        run: |
+          mkdir -p artifacts
+          cp ../*.deb ../*.buildinfo ../*.changes artifacts/ 2>/dev/null || true
+          cp build.log lintian.log package-contents.txt artifacts/ 2>/dev/null || true
+
+      - name: Upload build artifacts
+        if: steps.build.outputs.build_success == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: debian-package
+          path: artifacts/
+          retention-days: 14
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && steps.build.outputs.build_success == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            let lintianOutput = '';
+            if (fs.existsSync('lintian.log')) {
+              lintianOutput = fs.readFileSync('lintian.log', 'utf8');
+            }
+
+            const lintianClean = '${{ steps.lintian.outputs.lintian_clean }}' === 'true';
+            const lintianStatus = lintianClean ? '✅ No issues' : '⚠️ Issues found';
+
+            const comment = `## Build Test Results
+
+            | Check | Status |
+            |-------|--------|
+            | Build | ✅ Success |
+            | Lintian | ${lintianStatus} |
+
+            ### Artifacts
+
+            The built package and logs are available as artifacts on this workflow run.
+
+            ${lintianOutput && !lintianClean ? `
+            ### Lintian Output
+
+            <details>
+            <summary>Click to expand</summary>
+
+            \`\`\`
+            ${lintianOutput}
+            \`\`\`
+
+            </details>
+            ` : ''}
+
+            ---
+            *Build test completed automatically.*
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Final summary
+        if: always()
+        run: |
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.build.outputs.build_success }}" = "true" ]; then
+            echo "✅ Build completed successfully" >> $GITHUB_STEP_SUMMARY
+
+            if [ "${{ steps.lintian.outputs.lintian_clean }}" = "true" ]; then
+              echo "✅ Lintian checks passed" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⚠️ Lintian found issues (review required)" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "❌ Build failed" >> $GITHUB_STEP_SUMMARY
+          fi

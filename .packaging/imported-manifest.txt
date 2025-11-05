@@ -1,0 +1,78 @@
+# Import Manifest
+# Generated: 2025-10-29 20:00:12 UTC
+# Upstream version: cli-v2025.10.0
+# Upstream repository: https://github.com/bitwarden/clients.git
+
+## Protected Files (not imported)
+
+- .git
+- .github
+- debian
+- .packaging
+- README.md
+- .gitignore
+
+## Renamed Files (imported with .upstream suffix)
+
+- CONTRIBUTING.md
+- SECURITY.md
+- .editorconfig
+- .vscode
+- .husky
+- .npmrc
+- .nvmrc
+- .prettierrc.json
+- .prettierignore
+- .browserslistrc
+- .storybook
+- .checkmarx
+- .codescene
+- .git-blame-ignore-revs
+- .gitattributes
+
+## Imported Files and Directories
+
+- ./angular.json
+- ./apps
+- ./babel.config.json
+- ./bitwarden_license
+- ./.browserslistrc.upstream
+- ./.checkmarx.upstream
+- ./CLAUDE.md
+- ./clients.code-workspace
+- ./.codescene.upstream
+- ./CONTRIBUTING.md.upstream
+- ./.editorconfig.upstream
+- ./eslint.config.mjs
+- ./.gitattributes.upstream
+- ./.git-blame-ignore-revs.upstream
+- ./.husky.upstream
+- ./jest.config.js
+- ./jest.preset.js
+- ./libs
+- ./LICENSE_BITWARDEN.txt
+- ./LICENSE_GPL.txt
+- ./LICENSE.txt
+- ./.npmrc.upstream
+- ./.nvmrc.upstream
+- ./nx.json
+- ./package.json
+- ./package-lock.json
+- ./.prettierignore.upstream
+- ./.prettierrc.json.upstream
+- ./README.upstream.md
+- ./scripts
+- ./SECURITY.md.upstream
+- ./.storybook.upstream
+- ./tailwind.config.js
+- ./tsconfig.base.json
+- ./tsconfig.eslint.json
+- ./tsconfig.json
+- ./.vscode.upstream
+
+## Import Statistics
+
+- Upstream tag: cli-v2025.10.0
+- Import date: 2025-10-29 20:00:12 UTC
+- Import script: .packaging/import-upstream.sh
+
