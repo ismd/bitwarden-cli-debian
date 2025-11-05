@@ -112,7 +112,7 @@ Then edit `~/.sbuildrc` to customize settings if needed. The example file is wel
 
 ```bash
 # Clone upstream and install dependencies in a temporary location
-VERSION=X.Y.Z  # Replace with actual version, e.g., 2025.10.1
+export VERSION=X.Y.Z  # Replace with actual version, e.g., 2025.10.1
 cd /tmp  # Use a temporary location for this step
 git clone --depth 1 --branch cli-v${VERSION} \
   https://github.com/bitwarden/clients.git \
@@ -509,7 +509,7 @@ sudo sbuild-createchroot unstable /srv/chroot/unstable-amd64-sbuild http://deb.d
 
 # Build (for packages with bundled dependencies)
 # 1. Create orig.tar.gz with node_modules (in /tmp)
-VERSION=X.Y.Z  # Replace with actual version, e.g., 2025.10.1
+export VERSION=X.Y.Z  # Replace with actual version, e.g., 2025.10.1
 cd /tmp
 git clone --depth 1 --branch cli-v${VERSION} \
   https://github.com/bitwarden/clients.git bitwarden-cli-${VERSION}-tmp
