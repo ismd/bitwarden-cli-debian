@@ -5,7 +5,7 @@ Maintainer: Vladimir Kosteley <debian@ismd.dev>
 Build-Depends: debhelper-compat (= 13),
                nodejs (>= 18),
                npm (>= 8)
-Standards-Version: 4.6.2
+Standards-Version: 4.7.0
 Homepage: https://github.com/bitwarden/clients/tree/main/apps/cli
 Vcs-Browser: https://github.com/ismd/bitwarden-cli-debian
 Vcs-Git: https://github.com/ismd/bitwarden-cli-debian.git

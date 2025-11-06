@@ -1,0 +1,110 @@
+Bitwarden CLI for Debian - Source Package Notes
+===============================================
+
+This package uses bundled npm dependencies in the orig.tar.gz, which requires
+special handling during source package preparation.
+
+Why Bundled Dependencies?
+--------------------------
+
+The Bitwarden CLI has over 500 npm dependencies. Packaging each individually
+would be impractical and create an unmaintainable dependency chain. This
+approach is documented in debian/copyright with proper license information
+for all bundled packages.
+
+Creating the Source Package
+----------------------------
+
+The orig.tar.gz CANNOT be downloaded directly from upstream because it must
+include pre-installed node_modules. Follow these steps:
+
+Prerequisites for maintainers:
+   $ sudo apt-get install nodejs npm rsync jq
+
+   Note: nodejs >= 18 and npm >= 8 are required
+   - rsync: used by create-orig-tarball.sh for efficient file copying
+   - jq: used by helper scripts for JSON processing (optional if you
+         provide VERSION argument to create-orig-tarball.sh)
+
+1. Clone the upstream repository:
+   $ git clone https://github.com/bitwarden/clients.git
+   $ cd clients
+
+2. Check out the desired version tag:
+   $ git checkout cli-v2025.10.0
+
+3. Install all npm dependencies (this will create node_modules/):
+   $ npm ci
+
+4. Create the orig.tar.gz with bundled dependencies:
+   $ /path/to/debian/helpers/create-orig-tarball.sh 2025.10.0
+
+   This script will:
+   - Copy all source files including node_modules/
+   - Exclude .git, debian/, and build artifacts
+   - Create bitwarden-cli_2025.10.0.orig.tar.gz
+
+5. Extract and add debian/ directory:
+   $ tar xzf bitwarden-cli_2025.10.0.orig.tar.gz
+   $ cd bitwarden-cli-2025.10.0
+   $ cp -r /path/to/debian .
+
+6. Build the package:
+   $ dpkg-buildpackage -us -uc
+
+Verifying Bundled Dependencies
+-------------------------------
+
+To review licenses and versions of all bundled packages:
+
+  $ debian/helpers/list-npm-dependencies.sh
+
+To generate a detailed copyright analysis:
+
+  $ debian/helpers/generate-copyright-npm.sh
+
+Monitoring Upstream Releases
+-----------------------------
+
+The debian/watch file monitors upstream releases but cannot automatically
+download sources (due to bundling requirement). Use it to check for updates:
+
+  $ uscan --verbose --no-download
+
+Testing in Clean Environment
+-----------------------------
+
+See debian/TESTING-CLEAN-BUILD.md for instructions on testing with sbuild
+to ensure the package builds correctly in Debian's infrastructure.
+
+Build Process Details
+---------------------
+
+The build process (see debian/rules):
+
+1. Verifies node_modules/ exists in source tree
+2. Builds the CLI: cd apps/cli && npm run dist:oss:lin
+3. Creates standalone binary with 'pkg' (bundles Node.js runtime)
+4. Installs binary to /usr/bin/bw
+5. Skips stripping (would corrupt the pkg-bundled executable)
+
+The resulting binary is self-contained and does not require Node.js at runtime.
+
+Known Lintian Overrides
+------------------------
+
+See debian/bitwarden-cli.lintian-overrides for explanations of:
+- embedded-library (intentional, documented approach)
+- hardening issues (limitation of upstream 'pkg' tool)
+- missing NOTICE files (unused dev dependencies)
+
+Security Updates
+----------------
+
+Security updates for bundled dependencies require:
+1. Updating to new upstream version with fixed dependencies
+2. Or: patching specific vulnerable packages in node_modules/
+3. Rebuilding the package with updated sources
+
+For questions about this source package, contact the maintainer listed
+in debian/control.
