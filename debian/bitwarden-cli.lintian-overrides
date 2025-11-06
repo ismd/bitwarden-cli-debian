@@ -29,8 +29,10 @@ bitwarden-cli: hardening-no-fortify-functions [usr/bin/bw]
 # Playwright packages are development dependencies used only for browser
 # testing in the upstream project. They are not used in the CLI binary
 # and their NOTICE files are not relevant to the distributed package.
-bitwarden-cli: missing-notice-file-for-apache-license node_modules/playwright-core/NOTICE
-bitwarden-cli: missing-notice-file-for-apache-license node_modules/playwright/NOTICE
+# The NOTICE files exist in the source tree but are not installed in the
+# binary package, which is intentional since playwright is not used at runtime.
+bitwarden-cli source: missing-notice-file-for-apache-license node_modules/playwright-core/NOTICE
+bitwarden-cli source: missing-notice-file-for-apache-license node_modules/playwright/NOTICE
 
 # This is an unofficial Debian package for personal/testing use and is not
 # being uploaded to the official Debian archive, so no ITP bug is required.

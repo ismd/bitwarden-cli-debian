@@ -41,18 +41,6 @@ License: GPL-3.0
  On Debian systems, the complete text of the GNU General
  Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 
-Files: node_modules/playwright-core/*
-Copyright: Microsoft Corporation
-License: Apache-2.0
-Comment: This package includes a NOTICE file (node_modules/playwright-core/NOTICE)
- that acknowledges code derived from the Puppeteer project.
-
-Files: node_modules/playwright/*
-Copyright: Microsoft Corporation
-License: Apache-2.0
-Comment: This package includes a NOTICE file (node_modules/playwright/NOTICE)
- that acknowledges code derived from the Puppeteer project.
-
 Files: node_modules/*
 Copyright: Various authors (see individual package.json files)
 License: MIT or ISC or BSD-2-Clause or BSD-3-Clause or Apache-2.0
@@ -77,6 +65,18 @@ Comment: This package bundles npm dependencies in the source tarball.
  For detailed license information of individual packages, see:
   - Each package's package.json in node_modules/
   - Use debian/helpers/list-npm-dependencies.sh to generate a report
+
+Files: node_modules/playwright-core/*
+Copyright: Microsoft Corporation
+License: Apache-2.0
+Comment: This package includes a NOTICE file (node_modules/playwright-core/NOTICE)
+ that acknowledges code derived from the Puppeteer project.
+
+Files: node_modules/playwright/*
+Copyright: Microsoft Corporation
+License: Apache-2.0
+Comment: This package includes a NOTICE file (node_modules/playwright/NOTICE)
+ that acknowledges code derived from the Puppeteer project.
 
 License: Apache-2.0
  Licensed under the Apache License, Version 2.0 (the "License");
