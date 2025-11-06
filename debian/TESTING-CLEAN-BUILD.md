@@ -83,8 +83,6 @@ sudo sbuild-createchroot \
   http://deb.debian.org/debian
 ```
 
-This takes 5-10 minutes and downloads ~500MB.
-
 ### 4. Configure sbuild (optional)
 
 **Note:** sbuild works fine without any configuration! This step is completely optional.
