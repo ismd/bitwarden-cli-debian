@@ -108,7 +108,7 @@ Then edit `~/.sbuildrc` to customize settings if needed. The example file is wel
 ```bash
 # Clone repository in a temporary location
 cd /tmp
-git clone https://github.com/ismd/bitwarden-cli-debian.git bitwarden-cli-tmp
+git clone --depth 1 https://github.com/ismd/bitwarden-cli-debian.git bitwarden-cli-tmp
 cd bitwarden-cli-tmp
 
 # Install dependencies and create tarball
