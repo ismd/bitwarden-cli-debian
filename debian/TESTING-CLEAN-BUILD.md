@@ -106,14 +106,17 @@ Then edit `~/.sbuildrc` to customize settings if needed. The example file is wel
 #### Step 1: Create orig.tar.gz with bundled node_modules
 
 ```bash
-# Clone and install dependencies in a temporary location
-export VERSION=X.Y.Z  # Replace with actual version
+# Clone repository in a temporary location
 cd /tmp
-git clone https://github.com/ismd/bitwarden-cli-debian.git bitwarden-cli-${VERSION}
-cd bitwarden-cli-${VERSION}
+git clone https://github.com/ismd/bitwarden-cli-debian.git bitwarden-cli-tmp
+cd bitwarden-cli-tmp
+
+# Install dependencies and create tarball
 npm ci
 debian/helpers/create-orig-tarball.sh
-mv ../bitwarden-cli_${VERSION}.orig.tar.gz ~/build/
+
+# Move tarball to build directory
+mv ../bitwarden-cli_*.orig.tar.gz ~/build/
 ```
 
 #### Step 2: Extract and add debian/ directory
@@ -122,13 +125,13 @@ mv ../bitwarden-cli_${VERSION}.orig.tar.gz ~/build/
 
 ```bash
 # Go to your build directory
-cd ~/build  # Or wherever you want to build
+cd ~/build
 
 # Extract the orig.tar.gz
-tar xzf bitwarden-cli_${VERSION}.orig.tar.gz
+tar xzf bitwarden-cli_*.orig.tar.gz
 
-# Enter the extracted directory
-cd bitwarden-cli-${VERSION}
+# Enter the extracted directory (will be bitwarden-cli-VERSION)
+cd bitwarden-cli-*/
 
 # Add debian/ directory
 cp -r /path/to/bitwarden-cli-debian/debian .
