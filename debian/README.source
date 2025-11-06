@@ -36,20 +36,41 @@ Prerequisites for maintainers:
 3. Install all npm dependencies (this will create node_modules/):
    $ npm ci
 
-4. Create the orig.tar.gz with bundled dependencies:
+4. Pre-fetch Node.js binaries for pkg (REQUIRED for offline build):
+   $ export PKG_CACHE_PATH=$(pwd)/.pkg-cache
+   $ cd apps/cli && npm run package:oss:lin && cd ../..
+
+   This step is CRITICAL because:
+   - The 'pkg' tool bundles Node.js runtime into the binary
+   - On first run, pkg downloads Node.js base binaries from GitHub
+   - Debian's build infrastructure (buildd) has NO internet access
+   - Without pre-cached binaries, the build WILL FAIL on buildd
+
+   The .pkg-cache directory (~50MB) will contain the Node.js binary
+   needed for linux-x64 target.
+
+5. Create the orig.tar.gz with bundled dependencies:
    $ /path/to/debian/helpers/create-orig-tarball.sh 2025.10.0
+
+   The script will verify that .pkg-cache exists and include it
+   in the tarball.
 
    This script will:
    - Copy all source files including node_modules/
    - Exclude .git, debian/, and build artifacts
    - Create bitwarden-cli_2025.10.0.orig.tar.gz
 
-5. Extract and add debian/ directory:
+6. Extract and add debian/ directory:
    $ tar xzf bitwarden-cli_2025.10.0.orig.tar.gz
    $ cd bitwarden-cli-2025.10.0
    $ cp -r /path/to/debian .
 
-6. Build the package:
+7. Verify .pkg-cache is present:
+   $ ls -la .pkg-cache
+
+   You should see cached Node.js binaries here.
+
+8. Build the package:
    $ dpkg-buildpackage -us -uc
 
 Verifying Bundled Dependencies
@@ -85,10 +106,16 @@ The build process (see debian/rules):
 1. Verifies node_modules/ exists in source tree
 2. Builds the CLI: cd apps/cli && npm run dist:oss:lin
 3. Creates standalone binary with 'pkg' (bundles Node.js runtime)
+   - pkg uses pre-cached Node.js binaries from .pkg-cache/
+   - No internet access required during build
 4. Installs binary to /usr/bin/bw
 5. Skips stripping (would corrupt the pkg-bundled executable)
 
 The resulting binary is self-contained and does not require Node.js at runtime.
+
+Important: The .pkg-cache directory MUST be present in the source tree for
+the build to succeed on Debian's build infrastructure (which has no internet
+access). The create-orig-tarball.sh script ensures this is included.
 
 Known Lintian Overrides
 ------------------------

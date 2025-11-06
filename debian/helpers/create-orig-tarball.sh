@@ -57,6 +57,30 @@ if [ ! -d "${SOURCE_DIR}/node_modules" ]; then
 fi
 
 echo "✓ Found node_modules/ directory"
+
+# Check if .pkg-cache exists (required for offline build)
+if [ ! -d "${SOURCE_DIR}/.pkg-cache" ]; then
+    echo "WARNING: .pkg-cache/ not found!"
+    echo ""
+    echo "The pkg tool needs to download Node.js base binaries on first build."
+    echo "To create a fully offline-buildable tarball:"
+    echo "  1. cd ${SOURCE_DIR}"
+    echo "  2. export PKG_CACHE_PATH=\$(pwd)/.pkg-cache"
+    echo "  3. cd apps/cli && npm run package:oss:lin"
+    echo "  4. cd ../.."
+    echo "  5. Then re-run this script"
+    echo ""
+    echo "The .pkg-cache will be populated and included in the tarball."
+    echo ""
+    read -p "Continue without .pkg-cache? (build will require internet) [y/N]: " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+else
+    echo "✓ Found .pkg-cache/ directory"
+fi
+
 echo ""
 
 # Create temporary directory for tarball creation
@@ -70,6 +94,7 @@ mkdir -p "${TARBALL_DIR}"
 echo "Copying source files..."
 
 # Copy all source files except debian/ and version control
+# Note: .pkg-cache is included if it exists (required for offline builds)
 rsync -av \
     --exclude='.git' \
     --exclude='.github' \
@@ -91,6 +116,9 @@ echo "Checking tarball contents..."
 du -sh "${TARBALL_DIR}"
 echo "  Source files: $(find "${TARBALL_DIR}" -type f | wc -l) files"
 echo "  node_modules: $(find "${TARBALL_DIR}/node_modules" -type f 2>/dev/null | wc -l) files"
+if [ -d "${TARBALL_DIR}/.pkg-cache" ]; then
+    echo "  .pkg-cache: $(find "${TARBALL_DIR}/.pkg-cache" -type f 2>/dev/null | wc -l) files (for offline build)"
+fi
 
 echo ""
 echo "Creating tarball: ${OUTPUT_DIR}/${TARBALL_NAME}"

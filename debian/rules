@@ -22,10 +22,10 @@ export PKG_CACHE_PATH = $(CURDIR)/.pkg-cache
 	dh $@
 
 override_dh_auto_clean:
-	# Clean build artifacts but preserve bundled node_modules
+	# Clean build artifacts but preserve bundled node_modules and .pkg-cache
 	rm -rf apps/cli/build apps/cli/dist
-	# Clean pkg cache directory
-	rm -rf .pkg-cache
+	# Note: We do NOT clean .pkg-cache as it comes from orig.tar.gz
+	# and is required for offline builds
 	dh_auto_clean
 
 override_dh_auto_build:
@@ -33,6 +33,7 @@ override_dh_auto_build:
 	# The orig.tar.gz MUST contain:
 	#   1. Full Bitwarden clients source code
 	#   2. Pre-installed node_modules/ directory with all dependencies
+	#   3. Pre-cached pkg binaries in .pkg-cache/ directory
 	#
 	# This approach is acceptable for Debian when:
 	#   - Dependencies are properly documented in debian/copyright
@@ -51,6 +52,25 @@ override_dh_auto_build:
 		exit 1; \
 	fi
 	@echo "✓ Found node_modules/ directory"
+
+	@echo ""
+	@echo "Checking for pkg cache (required for offline build)..."
+	@if [ ! -d ".pkg-cache" ]; then \
+		echo "ERROR: .pkg-cache/ not found in source tree."; \
+		echo ""; \
+		echo "The 'pkg' tool needs Node.js base binaries to create the executable."; \
+		echo "Debian build infrastructure has NO internet access."; \
+		echo ""; \
+		echo "To prepare the source with pkg cache:"; \
+		echo "  1. export PKG_CACHE_PATH=\$$(pwd)/.pkg-cache"; \
+		echo "  2. cd apps/cli && npm run package:oss:lin && cd ../.."; \
+		echo "  3. Create orig tarball with: debian/helpers/create-orig-tarball.sh"; \
+		echo ""; \
+		echo "See debian/README.source for complete instructions."; \
+		echo ""; \
+		exit 1; \
+	fi
+	@echo "✓ Found .pkg-cache/ directory (offline build enabled)"
 
 	@echo ""
 	@echo "Building CLI application..."

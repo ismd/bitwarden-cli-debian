@@ -44,6 +44,9 @@ coverage/
 *.tsbuildinfo
 
 # pkg tool cache (used during binary creation)
+# Note: .pkg-cache is excluded from git but MUST be included in orig.tar.gz
+# for offline builds on Debian infrastructure (buildd has no internet access).
+# The create-orig-tarball.sh script handles this correctly.
 .pkg-cache/
 
 # ============================================================================
