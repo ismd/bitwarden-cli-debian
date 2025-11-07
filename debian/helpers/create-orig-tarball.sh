@@ -66,7 +66,7 @@ if [ ! -d "${SOURCE_DIR}/.pkg-cache" ]; then
     echo "To create a fully offline-buildable tarball:"
     echo "  1. cd ${SOURCE_DIR}"
     echo "  2. export PKG_CACHE_PATH=\$(pwd)/.pkg-cache"
-    echo "  3. cd apps/cli && npm run package:oss:lin"
+    echo "  3. cd apps/cli && npm run dist:oss:lin"
     echo "  4. cd ../.."
     echo "  5. Then re-run this script"
     echo ""

@@ -63,7 +63,7 @@ override_dh_auto_build:
 		echo ""; \
 		echo "To prepare the source with pkg cache:"; \
 		echo "  1. export PKG_CACHE_PATH=\$$(pwd)/.pkg-cache"; \
-		echo "  2. cd apps/cli && npm run package:oss:lin && cd ../.."; \
+		echo "  2. cd apps/cli && npm run dist:oss:lin && cd ../.."; \
 		echo "  3. Create orig tarball with: debian/helpers/create-orig-tarball.sh"; \
 		echo ""; \
 		echo "See debian/README.source for complete instructions."; \

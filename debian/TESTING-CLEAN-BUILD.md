@@ -117,7 +117,7 @@ npm ci
 # CRITICAL: Pre-fetch Node.js binaries for pkg (requires internet, one-time)
 # This step is REQUIRED because Debian build infrastructure has NO internet access
 export PKG_CACHE_PATH=$(pwd)/.pkg-cache
-cd apps/cli && npm run package:oss:lin && cd ../..
+cd apps/cli && npm run dist:oss:lin && cd ../..
 
 # Create tarball (will include node_modules/ and .pkg-cache/)
 debian/helpers/create-orig-tarball.sh
@@ -128,7 +128,7 @@ mv ../bitwarden-cli_*.orig.tar.gz ~/build/
 
 **What this does:**
 - `npm ci` - Installs all dependencies into node_modules/
-- `npm run package:oss:lin` - Builds the binary AND downloads Node.js base binary (~50MB) into .pkg-cache/
+- `npm run dist:oss:lin` - Builds the app, packages it with pkg, AND downloads Node.js base binary (~50MB) into .pkg-cache/
 - `create-orig-tarball.sh` - Creates tarball including both node_modules/ and .pkg-cache/
 
 The .pkg-cache is essential for offline builds on Debian's buildd infrastructure!
