@@ -103,7 +103,7 @@ Then edit `~/.sbuildrc` to customize settings if needed. The example file is wel
 
 **IMPORTANT:** For packages with bundled dependencies like bitwarden-cli, you must prepare the orig.tar.gz FIRST.
 
-#### Step 1: Create orig.tar.gz with bundled node_modules
+#### Step 1: Create orig.tar.gz with bundled node_modules and pkg cache
 
 ```bash
 # Clone repository in a temporary location
@@ -111,13 +111,27 @@ cd /tmp
 git clone --depth 1 https://github.com/ismd/bitwarden-cli-debian.git bitwarden-cli-tmp
 cd bitwarden-cli-tmp
 
-# Install dependencies and create tarball
+# Install dependencies
 npm ci
+
+# CRITICAL: Pre-fetch Node.js binaries for pkg (requires internet, one-time)
+# This step is REQUIRED because Debian build infrastructure has NO internet access
+export PKG_CACHE_PATH=$(pwd)/.pkg-cache
+cd apps/cli && npm run package:oss:lin && cd ../..
+
+# Create tarball (will include node_modules/ and .pkg-cache/)
 debian/helpers/create-orig-tarball.sh
 
 # Move tarball to build directory
 mv ../bitwarden-cli_*.orig.tar.gz ~/build/
 ```
+
+**What this does:**
+- `npm ci` - Installs all dependencies into node_modules/
+- `npm run package:oss:lin` - Builds the binary AND downloads Node.js base binary (~50MB) into .pkg-cache/
+- `create-orig-tarball.sh` - Creates tarball including both node_modules/ and .pkg-cache/
+
+The .pkg-cache is essential for offline builds on Debian's buildd infrastructure!
 
 #### Step 2: Extract and add debian/ directory
 
