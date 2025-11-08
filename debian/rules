@@ -94,6 +94,12 @@ override_dh_auto_install:
 	@test -f debian/bitwarden-cli/usr/bin/bw || \
 		(echo "ERROR: Binary installation failed" && exit 1)
 
+	# Install Apache-2.0 NOTICE files for bundled Playwright dev dependencies
+	install -D -m 0644 node_modules/playwright-core/NOTICE \
+		debian/bitwarden-cli/usr/share/doc/bitwarden-cli/NOTICE.playwright-core
+	install -D -m 0644 node_modules/playwright/NOTICE \
+		debian/bitwarden-cli/usr/share/doc/bitwarden-cli/NOTICE.playwright
+
 override_dh_strip:
 	# DO NOT strip the binary!
 	# The bw binary is created by 'pkg' which bundles Node.js runtime and application
