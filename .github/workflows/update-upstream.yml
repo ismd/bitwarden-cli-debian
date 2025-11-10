@@ -81,16 +81,15 @@ jobs:
           DATE=$(date -R)
           UPSTREAM_VERSION="${{ inputs.version }}"
 
-          # Create new changelog entry
-          cat > debian/changelog.new <<EOF
-bitwarden-cli (${NEW_VERSION}) UNRELEASED; urgency=medium
-
-  * New upstream release ${UPSTREAM_VERSION}
-  * TODO: Review changes and update this entry before merge
-
- -- Vladimir Kosteley <debian@ismd.dev>  ${DATE}
-
-EOF
+          {
+            printf 'bitwarden-cli (%s) UNRELEASED; urgency=medium\n' "${NEW_VERSION}"
+            printf '\n'
+            printf '  * New upstream release %s\n' "${UPSTREAM_VERSION}"
+            printf '  * TODO: Review changes and update this entry before merge\n'
+            printf '\n'
+            printf ' -- Vladimir Kosteley <debian@ismd.dev>  %s\n' "${DATE}"
+            printf '\n'
+          } > debian/changelog.new
 
           # Append old changelog
           cat debian/changelog >> debian/changelog.new
