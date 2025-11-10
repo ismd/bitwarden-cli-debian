@@ -155,9 +155,7 @@ jobs:
           RELEASE_BODY=$(echo "${RELEASE_DATA}" | jq -r '.body // "No release notes available"' | head -c 5000)
 
           # Save to file for PR body (to avoid quoting issues)
-          cat > /tmp/release-notes.txt <<EOF
-${RELEASE_BODY}
-EOF
+          printf '%s\n' "${RELEASE_BODY}" > /tmp/release-notes.txt
 
           echo "release_name=${RELEASE_NAME}" >> $GITHUB_OUTPUT
           echo "release_url=${RELEASE_URL}" >> $GITHUB_OUTPUT
