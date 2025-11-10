@@ -48,21 +48,7 @@ The resulting `.deb` file will be in the parent directory.
 
 ## Testing in Clean Environment
 
-For proper testing before submission to Debian, use **sbuild**:
-
-```bash
-# One-time setup
-sudo apt-get install sbuild schroot debootstrap
-sudo sbuild-adduser $USER
-# Log out and back in
-sudo sbuild-createchroot unstable /srv/chroot/unstable-amd64-sbuild http://deb.debian.org/debian
-
-# Build
-dpkg-buildpackage -S -us -uc
-sbuild -d unstable ../bitwarden-cli_*.dsc
-```
-
-See [debian/TESTING-CLEAN-BUILD.md](debian/TESTING-CLEAN-BUILD.md) for complete instructions.
+See [debian/TESTING-CLEAN-BUILD.md](debian/TESTING-CLEAN-BUILD.md) for instructions on testing with sbuild.
 
 ## Upstream Source Management
 
