@@ -59,6 +59,12 @@ Prerequisites for maintainers:
    - Copy all source files including node_modules/
    - Exclude .git, debian/, and build artifacts
    - Create bitwarden-cli_2025.10.0.orig.tar.gz
+   - Automatically prune Windows-only prebuilt binaries that lintian forbids
+
+   The pruning step removes files such as *.exe, *.dll, and prebuilt win32
+   native modules (bufferutil, utf-8-validate, etc.) from node_modules/.
+   These artifacts are never used when building the Linux CLI but would
+   otherwise trigger lintian's source-contains-prebuilt-windows-binary tag.
 
 6. Extract and add debian/ directory:
    $ tar xzf bitwarden-cli_2025.10.0.orig.tar.gz

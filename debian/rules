@@ -94,11 +94,13 @@ override_dh_auto_install:
 	@test -f debian/bitwarden-cli/usr/bin/bw || \
 		(echo "ERROR: Binary installation failed" && exit 1)
 
-	# Install Apache-2.0 NOTICE files for bundled Playwright dev dependencies
+	# Install Apache-2.0 NOTICE files for bundled Playwright dev dependencies.
+	# Keep the filename as NOTICE (required by the license) but namespace them
+	# inside subdirectories to avoid collisions.
 	install -D -m 0644 node_modules/playwright-core/NOTICE \
-		debian/bitwarden-cli/usr/share/doc/bitwarden-cli/NOTICE.playwright-core
+		debian/bitwarden-cli/usr/share/doc/bitwarden-cli/playwright-core/NOTICE
 	install -D -m 0644 node_modules/playwright/NOTICE \
-		debian/bitwarden-cli/usr/share/doc/bitwarden-cli/NOTICE.playwright
+		debian/bitwarden-cli/usr/share/doc/bitwarden-cli/playwright/NOTICE
 
 override_dh_strip:
 	# DO NOT strip the binary!

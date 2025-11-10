@@ -7,6 +7,9 @@
 
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PRUNE_BIN_SCRIPT="${SCRIPT_DIR}/prune-binary-blobs.sh"
+
 # Detect if first argument is a directory (source tree path)
 if [ -d "$1" ] && [ -f "$1/package.json" ]; then
     SOURCE_DIR="$1"
@@ -110,6 +113,23 @@ rsync -av \
     --exclude='.npm' \
     --exclude='.cache' \
     "${SOURCE_DIR}/" "${TARBALL_DIR}/"
+
+echo ""
+echo "Pruning Windows-specific binary blobs (lintian compliance)..."
+"${PRUNE_BIN_SCRIPT}" "${TARBALL_DIR}"
+
+REQUIRED_NOTICES=(
+    "node_modules/playwright-core/NOTICE"
+    "node_modules/playwright/NOTICE"
+)
+
+for notice in "${REQUIRED_NOTICES[@]}"; do
+    if [ ! -f "${TARBALL_DIR}/${notice}" ]; then
+        echo "ERROR: Required Apache NOTICE file missing: ${notice}"
+        echo "Please ensure 'npm ci' has populated node_modules correctly."
+        exit 1
+    fi
+done
 
 echo ""
 echo "Checking tarball contents..."
