@@ -79,12 +79,13 @@ jobs:
           NEW_REVISION=$((CURRENT_REVISION + 1))
           NEW_VERSION="${VERSION}-${NEW_REVISION}"
           DATE=$(date -R)
+          UPSTREAM_VERSION="${{ inputs.version }}"
 
           # Create new changelog entry
           cat > debian/changelog.new <<EOF
 bitwarden-cli (${NEW_VERSION}) UNRELEASED; urgency=medium
 
-  * New upstream release ${{ inputs.version }}
+  * New upstream release ${UPSTREAM_VERSION}
   * TODO: Review changes and update this entry before merge
 
  -- Vladimir Kosteley <debian@ismd.dev>  ${DATE}
@@ -156,8 +157,8 @@ EOF
 
           # Save to file for PR body (to avoid quoting issues)
           cat > /tmp/release-notes.txt <<EOF
-          ${RELEASE_BODY}
-          EOF
+${RELEASE_BODY}
+EOF
 
           echo "release_name=${RELEASE_NAME}" >> $GITHUB_OUTPUT
           echo "release_url=${RELEASE_URL}" >> $GITHUB_OUTPUT
