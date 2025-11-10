@@ -153,13 +153,7 @@ cp -r /path/to/bitwarden-cli-debian/debian .
 
 #### Step 3: Create source package
 
-**CRITICAL:** The orig.tar.gz MUST be in the parent directory!
-
 ```bash
-# Verify orig.tar.gz exists
-ls -lh ../bitwarden-cli_*.orig.tar.gz
-
-# Now build source package
 dpkg-buildpackage -S -us -uc
 ```
 
