@@ -185,6 +185,16 @@ sbuild -d trixie ../bitwarden-cli_*.dsc
 sbuild -d bookworm ../bitwarden-cli_*.dsc
 ```
 
+#### Step 5: Verify Offline Build (CRITICAL)
+
+Debian's buildd has **NO internet access**. Always test offline:
+
+```bash
+sbuild --no-enable-network -d unstable ../bitwarden-cli_*.dsc
+```
+
+**Common failure:** `pkg` trying to download Node.js binaries means your .pkg-cache has the wrong Node.js version. The pkg tool detects the build environment's Node.js version (not your dev machine's version). Solution: Recreate orig.tar.gz using the same Node.js major version as the target Debian release (check with `apt-cache show nodejs`).
+
 ### Understanding the Output
 
 sbuild will:
