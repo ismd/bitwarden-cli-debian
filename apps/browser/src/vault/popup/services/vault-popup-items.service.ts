@@ -120,7 +120,7 @@ export class VaultPopupItemsService {
                 .cipherListViews$(userId)
                 .pipe(filter((ciphers) => ciphers != null)),
               this.cipherService.failedToDecryptCiphers$(userId),
-              this.restrictedItemTypesService.restricted$.pipe(startWith([])),
+              this.restrictedItemTypesService.restricted$,
             ]),
           ),
           map(([ciphers, failedToDecryptCiphers, restrictions]) => {
@@ -260,6 +260,13 @@ export class VaultPopupItemsService {
     this._ciphersLoading$.pipe(map(() => true)),
     this.remainingCiphers$.pipe(map(() => false)),
   ).pipe(startWith(true), distinctUntilChanged(), shareReplay({ refCount: false, bufferSize: 1 }));
+
+  /** Observable that indicates whether there is search text present.
+   */
+  hasSearchText$: Observable<boolean> = this._hasSearchText.pipe(
+    distinctUntilChanged(),
+    shareReplay({ bufferSize: 1, refCount: true }),
+  );
 
   /**
    * Observable that indicates whether a filter or search text is currently applied to the ciphers.

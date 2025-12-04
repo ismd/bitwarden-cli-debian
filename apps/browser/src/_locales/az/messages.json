@@ -31,6 +31,9 @@
   "useSingleSignOn": {
     "message": "Vahid daxil olma üsulunu istifadə et"
   },
+  "yourOrganizationRequiresSingleSignOn": {
+    "message": "Təşkilatınız, vahid daxil olma tələb edir."
+  },
   "welcomeBack": {
     "message": "Yenidən xoş gəlmisiniz"
   },
@@ -551,14 +554,14 @@
     "message": "Axtarışı sıfırla"
   },
   "archiveNoun": {
-    "message": "Archive",
+    "message": "Arxiv",
     "description": "Noun"
   },
   "archiveVerb": {
-    "message": "Archive",
+    "message": "Arxivlə",
     "description": "Verb"
   },
-  "unarchive": {
+  "unArchive": {
     "message": "Arxivdən çıxart"
   },
   "itemsInArchive": {
@@ -570,10 +573,10 @@
   "noItemsInArchiveDesc": {
     "message": "Arxivlənmiş elementlər burada görünəcək, ümumi axtarış nəticələrindən və avto-doldurma təkliflərindən xaric ediləcək."
   },
-  "itemSentToArchive": {
+  "itemWasSentToArchive": {
     "message": "Element arxivə göndərildi"
   },
-  "itemRemovedFromArchive": {
+  "itemUnarchived": {
     "message": "Element arxivdən çıxarıldı"
   },
   "archiveItem": {
@@ -587,6 +590,9 @@
   },
   "view": {
     "message": "Bax"
+  },
+  "viewAll": {
+    "message": "View all"
   },
   "viewLogin": {
     "message": "Girişə bax"
@@ -734,7 +740,7 @@
     "message": "Yararsız ana parol"
   },
   "invalidMasterPasswordConfirmEmailAndHost": {
-    "message": "Invalid master password. Confirm your email is correct and your account was created on $HOST$.",
+    "message": "Yararsız ana parol. E-poçtunuzun doğru olduğunu və hesabınızın $HOST$ üzərində yaradıldığını təsdiqləyin.",
     "placeholders": {
       "host": {
         "content": "$1",
@@ -1027,6 +1033,18 @@
   },
   "editedItem": {
     "message": "Element saxlanıldı"
+  },
+  "savedWebsite": {
+    "message": "Saved website"
+  },
+  "savedWebsites": {
+    "message": "Saved websites ( $COUNT$ )",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
   },
   "deleteItemConfirmation": {
     "message": "Həqiqətən tullantı qutusuna göndərmək istəyirsiniz?"
@@ -1548,6 +1566,15 @@
   "readSecurityKey": {
     "message": "Güvənlik açarını oxu"
   },
+  "readingPasskeyLoading": {
+    "message": "Keçid açarı oxunur..."
+  },
+  "passkeyAuthenticationFailed": {
+    "message": "Keçid açarı kimlik doğrulaması uğursuzdur"
+  },
+  "useADifferentLogInMethod": {
+    "message": "Fərqli bir giriş üsulu istifadə edin"
+  },
   "awaitingSecurityKeyInteraction": {
     "message": "Güvənlik açarı ilə əlaqə gözlənilir..."
   },
@@ -1667,8 +1694,29 @@
   "turnOffAutofill": {
     "message": "Avto-doldurmanı söndür"
   },
+  "confirmAutofill": {
+    "message": "Confirm autofill"
+  },
+  "confirmAutofillDesc": {
+    "message": "This site doesn't match your saved login details. Before you fill in your login credentials, make sure it's a trusted site."
+  },
   "showInlineMenuLabel": {
     "message": "Avto-doldurma təkliflərini form xanalarında göstər"
+  },
+  "howDoesBitwardenProtectFromPhishing": {
+    "message": "How does Bitwarden protect your data from phishing?"
+  },
+  "currentWebsite": {
+    "message": "Current website"
+  },
+  "autofillAndAddWebsite": {
+    "message": "Autofill and add this website"
+  },
+  "autofillWithoutAdding": {
+    "message": "Autofill without adding"
+  },
+  "doNotAutofill": {
+    "message": "Do not autofill"
   },
   "showInlineMenuIdentitiesLabel": {
     "message": "Kimlikləri təklif kimi göstər"
@@ -3208,7 +3256,7 @@
     }
   },
   "exportingOrganizationVaultFromPasswordManagerWithDataOwnershipDesc": {
-    "message": "Only the organization vault associated with $ORGANIZATION$ will be exported.",
+    "message": "Yalnız $ORGANIZATION$ ilə əlaqələndirilmiş təşkilat seyfi xaricə köçürüləcək.",
     "placeholders": {
       "organization": {
         "content": "$1",
@@ -3217,7 +3265,7 @@
     }
   },
   "exportingOrganizationVaultFromAdminConsoleWithDataOwnershipDesc": {
-    "message": "Only the organization vault associated with $ORGANIZATION$ will be exported. My items collections will not be included.",
+    "message": "Yalnız $ORGANIZATION$ ilə əlaqələndirilmiş təşkilat seyfi xaricə köçürüləcək. Element kolleksiyalarım daxil edilməyəcək.",
     "placeholders": {
       "organization": {
         "content": "$1",
@@ -3230,6 +3278,9 @@
   },
   "decryptionError": {
     "message": "Şifrə açma xətası"
+  },
+  "errorGettingAutoFillData": {
+    "message": "Error getting autofill data"
   },
   "couldNotDecryptVaultItemsBelow": {
     "message": "Bitwarden, aşağıda sadalanan seyf element(lər)inin şifrəsini aça bilmədi."
@@ -4001,6 +4052,15 @@
   "autofillOnPageLoadSetToDefault": {
     "message": "\"Səhifə yüklənəndə avto-doldurma\" özəlliyi ilkin ayarı istifadə etmək üzrə ayarlandı.",
     "description": "Toast message for informing the user that autofill on page load has been set to the default setting."
+  },
+  "cannotAutofill": {
+    "message": "Cannot autofill"
+  },
+  "cannotAutofillExactMatch": {
+    "message": "Default matching is set to 'Exact Match'. The current website does not exactly match the saved login details for this item."
+  },
+  "okay": {
+    "message": "Okay"
   },
   "toggleSideNavigation": {
     "message": "Yan naviqasiyanı aç/bağla"
@@ -5570,17 +5630,37 @@
   "hasItemsVaultNudgeTitle": {
     "message": "Seyfinizə xoş gəlmisiniz!"
   },
-  "phishingPageTitle": {
-    "message": "Fişinq veb sayt"
+  "phishingPageTitleV2": {
+    "message": "Fişinq cəhdi aşkarlandı"
   },
-  "phishingPageCloseTab": {
-    "message": "Vərəqi bağla"
+  "phishingPageSummary": {
+    "message": "Ziyarət etməyə cəhd etdiyiniz sayt, zərərli sayt kimi tanınır və təhlükəsizlik baxımından risklidir."
   },
-  "phishingPageContinue": {
-    "message": "Davam"
+  "phishingPageCloseTabV2": {
+    "message": "Bu vərəqi bağla"
   },
-  "phishingPageLearnWhy": {
-    "message": "Bunu niyə görürürsünüz?"
+  "phishingPageContinueV2": {
+    "message": "Bu sayta davam et (tövsiyə olunmur)"
+  },
+  "phishingPageExplanation1": {
+    "message": "Bu sayt burada üzə çıxdı ",
+    "description": "This is in multiple parts to allow for bold text in the middle of the sentence. A proper name follows this."
+  },
+  "phishingPageExplanation2": {
+    "message": "Bu mənbədə fərdi və həssas məlumatların oğurlanması üçün istifadə olunan məlum fişinq saytların açıq mənbəli siyahısıdır.",
+    "description": "This is in multiple parts to allow for bold text in the middle of the sentence. A proper name precedes this."
+  },
+  "phishingPageLearnMore": {
+    "message": "Fişinq aşkarlaması haqqında daha ətraflı"
+  },
+  "protectedBy": {
+    "message": "$PRODUCT$ tərəfindən qorunur",
+    "placeholders": {
+      "product": {
+        "content": "$1",
+        "example": "Bitwarden Phishing Blocker"
+      }
+    }
   },
   "hasItemsVaultNudgeBodyOne": {
     "message": "Hazırkı səhifə üçün elementləri avto-doldur"
@@ -5685,5 +5765,18 @@
   },
   "confirmKeyConnectorDomain": {
     "message": "Key Connector domenini təsdiqlə"
+  },
+  "atRiskLoginsSecured": {
+    "message": "Riskli girişlərinizi güvənli hala gətirməyiniz əladır!"
+  },
+  "settingDisabledByPolicy": {
+    "message": "Bu ayar, təşkilatınızın siyasəti tərəfindən sıradan çıxarılıb.",
+    "description": "This hint text is displayed when a user setting is disabled due to an organization policy."
+  },
+  "zipPostalCodeLabel": {
+    "message": "ZIP / Poçt kodu"
+  },
+  "cardNumberLabel": {
+    "message": "Kart nömrəsi"
   }
 }
