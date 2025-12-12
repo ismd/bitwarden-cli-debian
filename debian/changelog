@@ -1,3 +1,10 @@
+bitwarden-cli (2025.12.0-2) UNRELEASED; urgency=medium
+
+  * New upstream release cli-v2025.12.0
+  * TODO: Review changes and update this entry before merge
+
+ -- Vladimir Kosteley <debian@ismd.dev>  Fri, 12 Dec 2025 06:06:27 +0000
+
 bitwarden-cli (2025.10.0-1) unstable; urgency=medium
 
   * Initial release for Debian

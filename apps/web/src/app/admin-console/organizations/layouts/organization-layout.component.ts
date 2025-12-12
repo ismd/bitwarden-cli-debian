@@ -1,13 +1,14 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
 import { CommonModule } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
+import { Component, inject, OnInit } from "@angular/core";
 import { ActivatedRoute, RouterModule } from "@angular/router";
 import { combineLatest, filter, map, Observable, switchMap, withLatestFrom } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { AdminConsoleLogo } from "@bitwarden/assets/svg";
 import {
+  canAccessAccessIntelligence,
   canAccessBillingTab,
   canAccessGroupsTab,
   canAccessMembersTab,
@@ -36,6 +37,8 @@ import { FreeFamiliesPolicyService } from "../../../billing/services/free-famili
 import { OrgSwitcherComponent } from "../../../layouts/org-switcher/org-switcher.component";
 import { WebLayoutModule } from "../../../layouts/web-layout.module";
 
+// FIXME(https://bitwarden.atlassian.net/browse/CL-764): Migrate to OnPush
+// eslint-disable-next-line @angular-eslint/prefer-on-push-component-change-detection
 @Component({
   selector: "app-organization-layout",
   templateUrl: "organization-layout.component.html",
@@ -70,16 +73,14 @@ export class OrganizationLayoutComponent implements OnInit {
   protected subscriber$: Observable<NonIndividualSubscriber>;
   protected getTaxIdWarning$: () => Observable<TaxIdWarningType | null>;
 
-  constructor(
-    private route: ActivatedRoute,
-    private organizationService: OrganizationService,
-    private platformUtilsService: PlatformUtilsService,
-    private policyService: PolicyService,
-    private providerService: ProviderService,
-    private accountService: AccountService,
-    private freeFamiliesPolicyService: FreeFamiliesPolicyService,
-    private organizationWarningsService: OrganizationWarningsService,
-  ) {}
+  private route = inject(ActivatedRoute);
+  private organizationService = inject(OrganizationService);
+  private platformUtilsService = inject(PlatformUtilsService);
+  private policyService = inject(PolicyService);
+  private providerService = inject(ProviderService);
+  private accountService = inject(AccountService);
+  private freeFamiliesPolicyService = inject(FreeFamiliesPolicyService);
+  private organizationWarningsService = inject(OrganizationWarningsService);
 
   async ngOnInit() {
     document.body.classList.remove("layout_frontend");
@@ -168,6 +169,10 @@ export class OrganizationLayoutComponent implements OnInit {
 
   canShowBillingTab(organization: Organization): boolean {
     return canAccessBillingTab(organization);
+  }
+
+  canShowAccessIntelligenceTab(organization: Organization): boolean {
+    return canAccessAccessIntelligence(organization);
   }
 
   getReportTabLabel(organization: Organization): string {
