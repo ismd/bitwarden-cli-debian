@@ -1,0 +1,11 @@
+# Debian build artifacts (generated during package build)
+.debhelper/
+bitwarden-cli/
+files
+*.substvars
+*.debhelper.log
+debhelper-build-stamp
+tmp/
+
+# Generated reports
+npm-dependencies-report.txt

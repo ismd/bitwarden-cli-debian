@@ -1,0 +1,23 @@
+#!/bin/sh
+# Basic smoke test for Bitwarden CLI
+# Tests that the binary runs and responds to basic commands
+
+set -e
+
+echo "Testing bw binary exists and is executable..."
+which bw
+test -x /usr/bin/bw
+
+echo "Testing bw --version..."
+bw --version
+
+echo "Testing bw --help..."
+bw --help | grep -q "Bitwarden"
+
+echo "Testing bw command list..."
+bw --help | grep -q "login"
+bw --help | grep -q "unlock"
+bw --help | grep -q "sync"
+
+echo ""
+echo "All smoke tests passed!"
