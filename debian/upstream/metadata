@@ -1,0 +1,8 @@
+---
+Bug-Database: https://github.com/bitwarden/clients/issues
+Bug-Submit: https://github.com/bitwarden/clients/issues/new/choose
+Changelog: https://github.com/bitwarden/clients/releases
+Documentation: https://bitwarden.com/help/cli/
+Repository: https://github.com/bitwarden/clients.git
+Repository-Browse: https://github.com/bitwarden/clients
+Security-Contact: https://bitwarden.com/help/security-faqs/#q-how-do-i-report-a-security-issue
