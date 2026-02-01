@@ -1,8 +1,8 @@
 import { NgModule } from "@angular/core";
 
-import { HecOrganizationIntegrationService } from "@bitwarden/bit-common/dirt/organization-integrations/services/hec-organization-integration-service";
 import { OrganizationIntegrationApiService } from "@bitwarden/bit-common/dirt/organization-integrations/services/organization-integration-api.service";
 import { OrganizationIntegrationConfigurationApiService } from "@bitwarden/bit-common/dirt/organization-integrations/services/organization-integration-configuration-api.service";
+import { OrganizationIntegrationService } from "@bitwarden/bit-common/dirt/organization-integrations/services/organization-integration-service";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { safeProvider } from "@bitwarden/ui-common";
 
@@ -13,8 +13,8 @@ import { OrganizationIntegrationsRoutingModule } from "./organization-integratio
   imports: [AdminConsoleIntegrationsComponent, OrganizationIntegrationsRoutingModule],
   providers: [
     safeProvider({
-      provide: HecOrganizationIntegrationService,
-      useClass: HecOrganizationIntegrationService,
+      provide: OrganizationIntegrationService,
+      useClass: OrganizationIntegrationService,
       deps: [OrganizationIntegrationApiService, OrganizationIntegrationConfigurationApiService],
     }),
     safeProvider({

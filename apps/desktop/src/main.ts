@@ -221,7 +221,7 @@ export class Main {
     );
 
     this.messagingMain = new MessagingMain(this, this.desktopSettingsService);
-    this.updaterMain = new UpdaterMain(this.i18nService, this.windowMain);
+    this.updaterMain = new UpdaterMain(this.i18nService, this.logService, this.windowMain);
 
     const messageSubject = new Subject<Message<Record<string, unknown>>>();
     this.messagingService = MessageSender.combine(
@@ -311,17 +311,8 @@ export class Main {
       this.windowMain,
     );
 
-    app
-      .whenReady()
-      .then(() => {
-        this.mainDesktopAutotypeService.init();
-      })
-      .catch((reason) => {
-        this.logService.error("Error initializing Autotype.", reason);
-      });
-
     app.on("will-quit", () => {
-      this.mainDesktopAutotypeService.disableAutotype();
+      this.mainDesktopAutotypeService.dispose();
     });
   }
 

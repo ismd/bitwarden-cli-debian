@@ -13,7 +13,7 @@ import {
 } from "@bitwarden/auth/common";
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
-import { KeyService, PBKDF2KdfConfig } from "@bitwarden/key-management";
+import { KdfConfigService, KeyService, PBKDF2KdfConfig } from "@bitwarden/key-management";
 
 import { Matrix } from "../../../spec/matrix";
 import { ApiService } from "../../abstractions/api.service";
@@ -27,6 +27,8 @@ import { TokenService } from "../../auth/abstractions/token.service";
 import { AuthenticationStatus } from "../../auth/enums/authentication-status";
 import { DomainSettingsService } from "../../autofill/services/domain-settings.service";
 import { BillingAccountProfileStateService } from "../../billing/abstractions";
+import { AccountCryptographicStateService } from "../../key-management/account-cryptography/account-cryptographic-state.service";
+import { EncString } from "../../key-management/crypto/models/enc-string";
 import { KeyConnectorService } from "../../key-management/key-connector/abstractions/key-connector.service";
 import { InternalMasterPasswordServiceAbstraction } from "../../key-management/master-password/abstractions/master-password.service.abstraction";
 import {
@@ -34,6 +36,7 @@ import {
   MasterPasswordSalt,
   MasterPasswordUnlockData,
 } from "../../key-management/master-password/types/master-password.types";
+import { SecurityStateService } from "../../key-management/security-state/abstractions/security-state.service";
 import { SendApiService } from "../../tools/send/services/send-api.service.abstraction";
 import { InternalSendService } from "../../tools/send/services/send.service.abstraction";
 import { UserId } from "../../types/guid";
@@ -72,6 +75,9 @@ describe("DefaultSyncService", () => {
   let tokenService: MockProxy<TokenService>;
   let authService: MockProxy<AuthService>;
   let stateProvider: MockProxy<StateProvider>;
+  let securityStateService: MockProxy<SecurityStateService>;
+  let kdfConfigService: MockProxy<KdfConfigService>;
+  let accountCryptographicStateService: MockProxy<AccountCryptographicStateService>;
 
   let sut: DefaultSyncService;
 
@@ -101,6 +107,9 @@ describe("DefaultSyncService", () => {
     tokenService = mock();
     authService = mock();
     stateProvider = mock();
+    securityStateService = mock();
+    kdfConfigService = mock();
+    accountCryptographicStateService = mock();
 
     sut = new DefaultSyncService(
       masterPasswordAbstraction,
@@ -127,6 +136,9 @@ describe("DefaultSyncService", () => {
       tokenService,
       authService,
       stateProvider,
+      securityStateService,
+      kdfConfigService,
+      accountCryptographicStateService,
     );
   });
 
@@ -153,6 +165,142 @@ describe("DefaultSyncService", () => {
         of({ hasMasterPassword: true } satisfies UserDecryptionOptions),
       );
       stateProvider.getUser.mockReturnValue(mock());
+    });
+
+    it("sets the correct keys for a V1 user with old response model", async () => {
+      const v1Profile = {
+        id: user1,
+        key: "encryptedUserKey",
+        privateKey: "privateKey",
+        providers: [] as any[],
+        organizations: [] as any[],
+        providerOrganizations: [] as any[],
+        avatarColor: "#fff",
+        securityStamp: "stamp",
+        emailVerified: true,
+        verifyDevices: false,
+        premiumPersonally: false,
+        premiumFromOrganization: false,
+        usesKeyConnector: false,
+      };
+      apiService.getSync.mockResolvedValue(
+        new SyncResponse({
+          profile: v1Profile,
+          folders: [],
+          collections: [],
+          ciphers: [],
+          sends: [],
+          domains: [],
+          policies: [],
+        }),
+      );
+      await sut.fullSync(true);
+      expect(masterPasswordAbstraction.setMasterKeyEncryptedUserKey).toHaveBeenCalledWith(
+        new EncString("encryptedUserKey"),
+        user1,
+      );
+      expect(keyService.setPrivateKey).toHaveBeenCalledWith("privateKey", user1);
+      expect(keyService.setProviderKeys).toHaveBeenCalledWith([], user1);
+      expect(keyService.setOrgKeys).toHaveBeenCalledWith([], [], user1);
+    });
+
+    it("sets the correct keys for a V1 user", async () => {
+      const v1Profile = {
+        id: user1,
+        key: "encryptedUserKey",
+        privateKey: "privateKey",
+        providers: [] as any[],
+        organizations: [] as any[],
+        providerOrganizations: [] as any[],
+        avatarColor: "#fff",
+        securityStamp: "stamp",
+        emailVerified: true,
+        verifyDevices: false,
+        premiumPersonally: false,
+        premiumFromOrganization: false,
+        usesKeyConnector: false,
+        accountKeys: {
+          publicKeyEncryptionKeyPair: {
+            wrappedPrivateKey: "wrappedPrivateKey",
+            publicKey: "publicKey",
+          },
+        },
+      };
+      apiService.getSync.mockResolvedValue(
+        new SyncResponse({
+          profile: v1Profile,
+          folders: [],
+          collections: [],
+          ciphers: [],
+          sends: [],
+          domains: [],
+          policies: [],
+        }),
+      );
+      await sut.fullSync(true);
+      expect(masterPasswordAbstraction.setMasterKeyEncryptedUserKey).toHaveBeenCalledWith(
+        new EncString("encryptedUserKey"),
+        user1,
+      );
+      expect(keyService.setPrivateKey).toHaveBeenCalledWith("wrappedPrivateKey", user1);
+      expect(keyService.setProviderKeys).toHaveBeenCalledWith([], user1);
+      expect(keyService.setOrgKeys).toHaveBeenCalledWith([], [], user1);
+    });
+
+    it("sets the correct keys for a V2 user", async () => {
+      const v2Profile = {
+        id: user1,
+        key: "encryptedUserKey",
+        providers: [] as unknown[],
+        organizations: [] as unknown[],
+        providerOrganizations: [] as unknown[],
+        avatarColor: "#fff",
+        securityStamp: "stamp",
+        emailVerified: true,
+        verifyDevices: false,
+        premiumPersonally: false,
+        premiumFromOrganization: false,
+        usesKeyConnector: false,
+        privateKey: "wrappedPrivateKey",
+        accountKeys: {
+          publicKeyEncryptionKeyPair: {
+            wrappedPrivateKey: "wrappedPrivateKey",
+            publicKey: "publicKey",
+            signedPublicKey: "signedPublicKey",
+          },
+          signatureKeyPair: {
+            wrappedSigningKey: "wrappedSigningKey",
+            verifyingKey: "verifyingKey",
+          },
+          securityState: {
+            securityState: "securityState",
+          },
+        },
+      };
+      apiService.getSync.mockResolvedValue(
+        new SyncResponse({
+          profile: v2Profile,
+          folders: [],
+          collections: [],
+          ciphers: [],
+          sends: [],
+          domains: [],
+          policies: [],
+        }),
+      );
+      await sut.fullSync(true);
+      expect(masterPasswordAbstraction.setMasterKeyEncryptedUserKey).toHaveBeenCalledWith(
+        new EncString("encryptedUserKey"),
+        user1,
+      );
+      expect(keyService.setPrivateKey).toHaveBeenCalledWith("wrappedPrivateKey", user1);
+      expect(keyService.setUserSigningKey).toHaveBeenCalledWith("wrappedSigningKey", user1);
+      expect(securityStateService.setAccountSecurityState).toHaveBeenCalledWith(
+        "securityState",
+        user1,
+      );
+      expect(keyService.setProviderKeys).toHaveBeenCalledWith([], user1);
+      expect(keyService.setOrgKeys).toHaveBeenCalledWith([], [], user1);
     });
 
     it("does a token refresh when option missing from options", async () => {
@@ -329,10 +477,8 @@ describe("DefaultSyncService", () => {
         // Mock the value of this observable because it's used in `syncProfile`. Without it, the test breaks.
         keyConnectorService.convertAccountRequired$ = of(false);
 
-        // Baseline date/time to compare sync time to, in order to avoid needing to use some kind of fake date provider.
-        const beforeSync = Date.now();
+        jest.useFakeTimers({ now: Date.now() });
 
-        // send it!
         await sut.fullSync(true, defaultSyncOptions);
 
         expectUpdateCallCount(mockUserState, 1);
@@ -340,9 +486,10 @@ describe("DefaultSyncService", () => {
         const updateCall = mockUserState.update.mock.calls[0];
         // Get the first argument to update(...) -- this will be the date callback that returns the date of the last successful sync
         const dateCallback = updateCall[0];
-        const actualTime = dateCallback() as Date;
+        const actualDate = dateCallback() as Date;
 
-        expect(Math.abs(actualTime.getTime() - beforeSync)).toBeLessThan(1);
+        expect(actualDate.getTime()).toEqual(jest.now());
+        jest.useRealTimers();
       });
 
       it("updates last sync time when no sync is necessary", async () => {

@@ -6,10 +6,14 @@ import { PremiumBadgeComponent } from "@bitwarden/angular/billing/components/pre
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { SendType } from "@bitwarden/common/tools/send/enums/send-type";
 import { ButtonModule, DialogService, MenuModule } from "@bitwarden/components";
 import { DefaultSendFormConfigService, SendAddEditDialogComponent } from "@bitwarden/send-ui";
 
+// FIXME(https://bitwarden.atlassian.net/browse/CL-764): Migrate to OnPush
+// eslint-disable-next-line @angular-eslint/prefer-on-push-component-change-detection
 @Component({
   selector: "tools-new-send-dropdown",
   templateUrl: "new-send-dropdown.component.html",
@@ -21,6 +25,8 @@ import { DefaultSendFormConfigService, SendAddEditDialogComponent } from "@bitwa
  */
 export class NewSendDropdownComponent {
   /** If true, the plus icon will be hidden */
+  // FIXME(https://bitwarden.atlassian.net/browse/CL-903): Migrate to Signals
+  // eslint-disable-next-line @angular-eslint/prefer-signals
   @Input() hideIcon: boolean = false;
 
   /** SendType provided for the markup to pass back the selected type of Send */
@@ -34,6 +40,7 @@ export class NewSendDropdownComponent {
     private accountService: AccountService,
     private dialogService: DialogService,
     private addEditFormConfigService: DefaultSendFormConfigService,
+    private configService: ConfigService,
   ) {
     this.canAccessPremium$ = this.accountService.activeAccount$.pipe(
       switchMap((account) =>
@@ -56,6 +63,11 @@ export class NewSendDropdownComponent {
 
     const formConfig = await this.addEditFormConfigService.buildConfig("add", undefined, type);
 
-    SendAddEditDialogComponent.open(this.dialogService, { formConfig });
+    const useRefresh = await this.configService.getFeatureFlag(FeatureFlag.SendUIRefresh);
+    if (useRefresh) {
+      SendAddEditDialogComponent.openDrawer(this.dialogService, { formConfig });
+    } else {
+      SendAddEditDialogComponent.open(this.dialogService, { formConfig });
+    }
   }
 }
